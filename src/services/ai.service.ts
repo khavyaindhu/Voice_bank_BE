@@ -1,6 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -169,14 +169,24 @@ export async function chat(
 ): Promise<string> {
   const systemPrompt = buildSystemPrompt(context);
 
-  const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 600,
-    system: systemPrompt,
-    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-1.5-flash',
+    systemInstruction: systemPrompt,
   });
 
-  const block = response.content[0];
-  if (block.type !== 'text') throw new Error('Unexpected response type from AI');
-  return block.text;
+  // Build history (all except last message)
+  // Gemini requires: history must start with 'user' and alternate user/model
+  const rawHistory = messages.slice(0, -1).map((m) => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }],
+  }));
+
+  // Drop leading non-user messages to satisfy Gemini requirement
+  const firstUserIdx = rawHistory.findIndex(m => m.role === 'user');
+  const history = firstUserIdx >= 0 ? rawHistory.slice(firstUserIdx) : [];
+
+  const chatSession = model.startChat({ history });
+  const lastMessage = messages[messages.length - 1]?.content || '';
+  const result = await chatSession.sendMessage(lastMessage);
+  return result.response.text();
 }
