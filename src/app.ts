@@ -6,9 +6,10 @@ import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
+const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:4200';
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:4200',
-  credentials: true,
+  origin: allowedOrigin === '*' ? '*' : allowedOrigin,
+  credentials: allowedOrigin !== '*',
 }));
 
 app.use(express.json());
