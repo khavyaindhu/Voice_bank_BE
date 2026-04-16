@@ -34,17 +34,21 @@ export async function sendMessage(req: AuthRequest, res: Response): Promise<void
       .slice(-10)
       .map((m) => ({ role: m.role, content: m.content }));
 
-    const aiResponse = await chat(historyForAI, context);
+    const aiResult = await chat(historyForAI, context);
 
     session.messages.push({
       role: 'assistant',
-      content: aiResponse,
+      content: aiResult.text,
       timestamp: new Date(),
     });
     session.lastActive = new Date();
     await session.save();
 
-    res.json({ response: aiResponse, sessionId: session._id });
+    res.json({
+      response: aiResult.text,
+      navigateTo: aiResult.navigateTo ?? null,
+      sessionId: session._id,
+    });
 
   } catch (err: unknown) {
     console.error('Chat error:', err);

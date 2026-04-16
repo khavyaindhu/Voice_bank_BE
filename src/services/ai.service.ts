@@ -317,30 +317,76 @@ function findIntent(message: string, ctx: ChatContext): string | null {
   return null;
 }
 
+// ── Navigation intents ────────────────────────────────────────────
+interface NavIntent {
+  patterns: RegExp[];
+  route: string;
+  label: string;
+}
+
+const navIntents: NavIntent[] = [
+  { patterns: [/go\s*to\s*wire|open\s*wire|wire\s*transfer\s*page|navigate.*wire/i], route: '/payments/wire', label: 'Wire Transfer' },
+  { patterns: [/go\s*to\s*ach|open\s*ach|ach\s*transfer\s*page|navigate.*ach/i], route: '/payments/ach', label: 'ACH Transfer' },
+  { patterns: [/go\s*to\s*zelle|open\s*zelle|zelle\s*page|navigate.*zelle/i], route: '/payments/zelle', label: 'Zelle' },
+  { patterns: [/go\s*to\s*card\s*pay|open\s*card\s*pay|card\s*payment\s*page/i], route: '/payments/card', label: 'Card Payment' },
+  { patterns: [/go\s*to\s*history|payment\s*history\s*page|transaction\s*history\s*page/i], route: '/payments/history', label: 'Payment History' },
+  { patterns: [/go\s*to\s*dashboard|open\s*dashboard|navigate.*dashboard|go\s*home/i], route: '/dashboard', label: 'Dashboard' },
+  { patterns: [/go\s*to\s*accounts|open\s*accounts|navigate.*accounts|my\s*accounts\s*page/i], route: '/accounts', label: 'Accounts' },
+  { patterns: [/go\s*to\s*cards|open\s*cards|navigate.*cards|my\s*cards\s*page/i], route: '/cards', label: 'Cards' },
+  { patterns: [/go\s*to\s*loans|open\s*loans|navigate.*loans|my\s*loans\s*page/i], route: '/loans', label: 'Loans' },
+  { patterns: [/apply.*loan|go\s*to\s*loan\s*appl|open\s*loan\s*appl/i], route: '/loans/apply', label: 'Loan Application' },
+  { patterns: [/go\s*to\s*payments|open\s*payments|navigate.*payments/i], route: '/payments/ach', label: 'Payments' },
+];
+
+function findNavIntent(message: string): NavIntent | null {
+  const lower = message.toLowerCase().trim();
+  for (const nav of navIntents) {
+    if (nav.patterns.some(p => p.test(lower))) return nav;
+  }
+  return null;
+}
+
+// ── Chat result type ──────────────────────────────────────────────
+export interface ChatResult {
+  text: string;
+  navigateTo?: string;
+}
+
 // ── Main chat function (no API key needed) ───────────────────────
 export async function chat(
   messages: ChatMessage[],
   context: ChatContext
-): Promise<string> {
+): Promise<ChatResult> {
   const lastMessage = messages[messages.length - 1]?.content ?? '';
 
-  // 1. Check for direct intent match
-  const intentResponse = findIntent(lastMessage, context);
-  if (intentResponse) return intentResponse;
-
-  // 2. Screen-specific hint if no intent matched and user sent a short/unclear message
-  const screenHint = screenHints[context.screen];
-  if (screenHint && lastMessage.split(' ').length <= 3) {
-    return screenHint;
+  // 1. Check for navigation intent first
+  const navMatch = findNavIntent(lastMessage);
+  if (navMatch) {
+    return {
+      text: `Sure! Taking you to the **${navMatch.label}** screen now. 🚀\n\nOnce you're there, feel free to ask me anything about it!`,
+      navigateTo: navMatch.route,
+    };
   }
 
-  // 3. Contextual fallback based on current screen
+  // 2. Check for direct intent match
+  const intentResponse = findIntent(lastMessage, context);
+  if (intentResponse) return { text: intentResponse };
+
+  // 3. Screen-specific hint if no intent matched and user sent a short/unclear message
+  const screenHint = screenHints[context.screen];
+  if (screenHint && lastMessage.split(' ').length <= 3) {
+    return { text: screenHint };
+  }
+
+  // 4. Contextual fallback based on current screen
   const screenLabel = getScreenLabel(context.screen);
-  return `I'm here to help you on the **${screenLabel}** screen! 😊\n\n` +
-    `I can answer questions about:\n` +
-    `- How to complete this form\n` +
-    `- Transfer limits and fees\n` +
-    `- Processing times\n\n` +
-    `Try asking: *"How do I make a wire transfer?"* or *"What are the ACH steps?"*\n\n` +
-    `Or type **help** to see everything I can do.`;
+  return {
+    text: `I'm here to help you on the **${screenLabel}** screen! 😊\n\n` +
+      `I can answer questions about:\n` +
+      `- How to complete this form\n` +
+      `- Transfer limits and fees\n` +
+      `- Processing times\n\n` +
+      `Try asking: *"Go to Wire Transfer"* or *"How do I make a wire transfer?"*\n\n` +
+      `Or type **help** to see everything I can do.`,
+  };
 }
