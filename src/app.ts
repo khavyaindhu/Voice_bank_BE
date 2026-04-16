@@ -9,9 +9,22 @@ const app = express();
 app.set('trust proxy', 1);
 
 const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:4200';
+
+// Dynamic CORS: allow exact FRONTEND_URL, all GitHub Codespace origins,
+// and localhost for local dev — no need to update env var on every restart.
 app.use(cors({
-  origin: allowedOrigin === '*' ? '*' : allowedOrigin,
-  credentials: allowedOrigin !== '*',
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // allow non-browser / curl
+    if (
+      origin === allowedOrigin ||
+      /^https:\/\/[a-z0-9-]+-4200\.app\.github\.dev$/.test(origin) ||
+      /^http:\/\/localhost(:\d+)?$/.test(origin)
+    ) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  credentials: true,
 }));
 
 app.use(express.json());
