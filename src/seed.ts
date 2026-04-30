@@ -7,6 +7,7 @@ import Account from './models/Account';
 import Card from './models/Card';
 import Loan from './models/Loan';
 import Transaction from './models/Transaction';
+import Payee from './models/Payee';
 
 async function seed(): Promise<void> {
   await connectDB();
@@ -18,6 +19,7 @@ async function seed(): Promise<void> {
     Card.deleteMany({}),
     Loan.deleteMany({}),
     Transaction.deleteMany({}),
+    Payee.deleteMany({}),
   ]);
 
   const user = await User.create({
@@ -120,6 +122,84 @@ async function seed(): Promise<void> {
     { userId: user._id, type: 'card_payment', status: 'completed', amount: 500, fromAccount: checking.maskedNumber, memo: 'Credit card payment – custom', referenceNumber: 'CPY-G7H8-1700004', completedAt: txDates[3] },
     { userId: user._id, type: 'ach', status: 'completed', amount: 1200, fromAccount: savings.maskedNumber, toAccount: '****3311', recipientName: 'City Utilities', routingNumber: '042000314', memo: 'Utility bill', referenceNumber: 'ACH-I9J0-1700005', completedAt: txDates[4] },
     { userId: user._id, type: 'zelle', status: 'completed', amount: 150, fromAccount: checking.maskedNumber, recipientName: 'sara@example.com', memo: 'Concert tickets', referenceNumber: 'ZEL-K1L2-1700006', completedAt: txDates[5] },
+  ]);
+
+  await Payee.create([
+    {
+      userId: user._id,
+      nickname: 'ABC Vendors',
+      fullName: 'ABC Vendors LLC',
+      bankName: 'Chase Bank',
+      routingNumber: '021000021',
+      accountNumber: '4521789012',
+      accountType: 'checking',
+      transferType: 'wire',
+      category: 'business',
+      avatarColor: '#002E6D',
+      lastPaidAmount: 12500,
+      lastPaidDate: new Date('2024-12-15'),
+      totalTransfers: 8,
+    },
+    {
+      userId: user._id,
+      nickname: 'Mom',
+      fullName: 'Sarah Johnson',
+      bankName: 'Wells Fargo',
+      routingNumber: '121000248',
+      accountNumber: '9876543210',
+      accountType: 'savings',
+      transferType: 'ach',
+      category: 'family',
+      avatarColor: '#BE185D',
+      lastPaidAmount: 500,
+      lastPaidDate: new Date('2025-01-02'),
+      totalTransfers: 24,
+    },
+    {
+      userId: user._id,
+      nickname: 'Metro Properties',
+      fullName: 'Metro Properties Group Inc',
+      bankName: 'Bank of America',
+      routingNumber: '026009593',
+      accountNumber: '1122334455',
+      accountType: 'checking',
+      transferType: 'ach',
+      category: 'business',
+      avatarColor: '#CC0000',
+      lastPaidAmount: 2200,
+      lastPaidDate: new Date('2025-01-01'),
+      totalTransfers: 12,
+    },
+    {
+      userId: user._id,
+      nickname: 'Tech Solutions',
+      fullName: 'Tech Solutions Inc',
+      bankName: 'Citibank',
+      routingNumber: '021000089',
+      accountNumber: '5566778899',
+      accountType: 'checking',
+      transferType: 'wire',
+      category: 'business',
+      avatarColor: '#1D4ED8',
+      lastPaidAmount: 8750,
+      lastPaidDate: new Date('2024-11-28'),
+      totalTransfers: 5,
+    },
+    {
+      userId: user._id,
+      nickname: 'City Utilities',
+      fullName: 'City Utility Services Corp',
+      bankName: 'U.S. Bank',
+      routingNumber: '091000022',
+      accountNumber: '3344556677',
+      accountType: 'checking',
+      transferType: 'ach',
+      category: 'utility',
+      avatarColor: '#059669',
+      lastPaidAmount: 185,
+      lastPaidDate: new Date('2025-01-05'),
+      totalTransfers: 18,
+    },
   ]);
 
   console.log('Seed complete!');
