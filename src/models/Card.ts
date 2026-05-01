@@ -2,6 +2,8 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ICard extends Document {
   userId: mongoose.Types.ObjectId;
+  customerDisplayId?: string;   // CUST-001 etc. — staff cross-reference
+  customerName?: string;        // denormalized for staff view
   cardType: 'credit' | 'debit';
   network: 'Visa' | 'Mastercard';
   maskedNumber: string;
@@ -12,13 +14,16 @@ export interface ICard extends Document {
   availableCredit?: number;
   minimumPayment?: number;
   dueDate?: Date;
-  status: 'active' | 'frozen' | 'blocked';
+  status: 'active' | 'frozen' | 'blocked' | 'disputed' | 'expiring';
+  disputes?: number;
   rewardPoints?: number;
 }
 
 const CardSchema = new Schema<ICard>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    customerDisplayId: { type: String },
+    customerName:      { type: String },
     cardType: { type: String, enum: ['credit', 'debit'], required: true },
     network: { type: String, enum: ['Visa', 'Mastercard'], required: true },
     maskedNumber: { type: String, required: true },
@@ -29,7 +34,8 @@ const CardSchema = new Schema<ICard>(
     availableCredit: Number,
     minimumPayment: Number,
     dueDate: Date,
-    status: { type: String, enum: ['active', 'frozen', 'blocked'], default: 'active' },
+    status: { type: String, enum: ['active', 'frozen', 'blocked', 'disputed', 'expiring'], default: 'active' },
+    disputes:     { type: Number, default: 0 },
     rewardPoints: { type: Number, default: 0 },
   },
   { timestamps: true }

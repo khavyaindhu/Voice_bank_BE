@@ -6,6 +6,7 @@ import cardsRoutes from './cards.routes';
 import loansRoutes from './loans.routes';
 import chatRoutes from './chat.routes';
 import payeesRoutes from './payees.routes';
+import staffRoutes from './staff.routes';
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use('/cards', cardsRoutes);
 router.use('/loans', loansRoutes);
 router.use('/chat', chatRoutes);
 router.use('/payees', payeesRoutes);
+router.use('/staff', staffRoutes);
 
 export default router;
