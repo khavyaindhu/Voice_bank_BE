@@ -127,8 +127,8 @@ async function seed(): Promise<void> {
   await Payee.create([
     {
       userId: user._id,
-      nickname: 'ABC Vendors',
-      fullName: 'ABC Vendors LLC',
+      nickname: 'Vijaya',
+      fullName: 'Vijaya Krishnamurthy',
       bankName: 'Chase Bank',
       routingNumber: '021000021',
       accountNumber: '4521789012',
@@ -142,8 +142,8 @@ async function seed(): Promise<void> {
     },
     {
       userId: user._id,
-      nickname: 'Mom',
-      fullName: 'Sarah Johnson',
+      nickname: 'Father',
+      fullName: 'Ramesh Venkataraman',
       bankName: 'Wells Fargo',
       routingNumber: '121000248',
       accountNumber: '9876543210',
