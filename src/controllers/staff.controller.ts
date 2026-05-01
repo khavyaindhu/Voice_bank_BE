@@ -58,7 +58,11 @@ function getDateRange(
 export async function getStaffCards(req: Request, res: Response): Promise<void> {
   const { status, customerId, search } = req.query as Record<string, string>;
 
-  const filter: Record<string, unknown> = {};
+  // Only return staff-customer cards (those with a customerDisplayId set)
+  const filter: Record<string, unknown> = {
+    customerDisplayId: { $exists: true, $ne: '' },
+    customerName:      { $exists: true, $ne: '' },
+  };
   if (customerId) filter.customerDisplayId = customerId;
   if (status && status !== 'all') filter.status = status;
   if (search) {
