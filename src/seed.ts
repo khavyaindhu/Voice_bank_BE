@@ -107,13 +107,20 @@ async function seed(): Promise<void> {
   ]);
 
   // ── Staff customers (exist in DB for staff portal; no UI login needed) ────
-  const [vijaya, ramesh, greenvalley, kavya, abcvendors, nayana] = await User.create([
+  const [vijaya, ramesh, greenvalley, kavya, abcvendors, nayana,
+         james, emily, michael, jake, sarah, robert] = await User.create([
     { username: 'vijaya.k',    email: 'vijaya.k@example.com',    password: 'Demo@1234', fullName: 'Vijaya Krishnamurthy' },
     { username: 'ramesh.v',    email: 'ramesh.v@example.com',    password: 'Demo@1234', fullName: 'Ramesh Venkataraman' },
     { username: 'greenvalley', email: 'accounts@greenvalley.com', password: 'Demo@1234', fullName: 'Green Valley Properties LLC' },
     { username: 'kavya.t',     email: 'kavya.t@example.com',     password: 'Demo@1234', fullName: 'Kavya Indhu Thiyagarajan' },
     { username: 'abcvendors',  email: 'ops@abcvendors.com',      password: 'Demo@1234', fullName: 'ABC Vendors LLC' },
     { username: 'nayana.r',    email: 'nayana.r@example.com',    password: 'Demo@1234', fullName: 'Nayana Rajan' },
+    { username: 'james.smith',   email: 'james.smith@example.com',   password: 'Demo@1234', fullName: 'James Smith' },
+    { username: 'emily.johnson', email: 'emily.johnson@example.com', password: 'Demo@1234', fullName: 'Emily Johnson' },
+    { username: 'michael.j',    email: 'michael.jordan@example.com', password: 'Demo@1234', fullName: 'Michael Jordan' },
+    { username: 'jake.williams', email: 'jake.williams@example.com', password: 'Demo@1234', fullName: 'Jake Williams' },
+    { username: 'sarah.davis',   email: 'sarah.davis@example.com',   password: 'Demo@1234', fullName: 'Sarah Davis' },
+    { username: 'robert.brown',  email: 'robert.brown@example.com',  password: 'Demo@1234', fullName: 'Robert Brown' },
   ]);
 
   // ── Cards for staff customers ─────────────────────────────────────────────
@@ -159,6 +166,52 @@ async function seed(): Promise<void> {
       cardType: 'credit', network: 'Mastercard', maskedNumber: '****8834', cardholderName: 'NAYANA RAJAN',
       expiryDate: '05/26', creditLimit: 10000, currentBalance: 2100, availableCredit: 7900,
       minimumPayment: 42, status: 'expiring', disputes: 0 },
+
+    // James Smith — active debit + credit
+    { userId: james._id, customerDisplayId: 'CUST-007', customerName: 'James Smith',
+      cardType: 'debit',  network: 'Visa',       maskedNumber: '****3301', cardholderName: 'JAMES SMITH',
+      expiryDate: '07/28', currentBalance: 18500, status: 'active', disputes: 0 },
+    { userId: james._id, customerDisplayId: 'CUST-007', customerName: 'James Smith',
+      cardType: 'credit', network: 'Mastercard', maskedNumber: '****7742', cardholderName: 'JAMES SMITH',
+      expiryDate: '09/27', creditLimit: 25000, currentBalance: 6800, availableCredit: 18200,
+      minimumPayment: 136, status: 'active', disputes: 0 },
+
+    // Emily Johnson — active debit, disputed credit
+    { userId: emily._id, customerDisplayId: 'CUST-008', customerName: 'Emily Johnson',
+      cardType: 'debit',  network: 'Visa',       maskedNumber: '****4412', cardholderName: 'EMILY JOHNSON',
+      expiryDate: '02/28', currentBalance: 9200, status: 'active', disputes: 0 },
+    { userId: emily._id, customerDisplayId: 'CUST-008', customerName: 'Emily Johnson',
+      cardType: 'credit', network: 'Visa',       maskedNumber: '****6623', cardholderName: 'EMILY JOHNSON',
+      expiryDate: '04/26', creditLimit: 12000, currentBalance: 3100, availableCredit: 8900,
+      minimumPayment: 62, status: 'disputed', disputes: 1 },
+
+    // Michael Jordan — active debit + credit
+    { userId: michael._id, customerDisplayId: 'CUST-009', customerName: 'Michael Jordan',
+      cardType: 'debit',  network: 'Mastercard', maskedNumber: '****8810', cardholderName: 'MICHAEL JORDAN',
+      expiryDate: '12/27', currentBalance: 42000, status: 'active', disputes: 0 },
+    { userId: michael._id, customerDisplayId: 'CUST-009', customerName: 'Michael Jordan',
+      cardType: 'credit', network: 'Visa',       maskedNumber: '****5530', cardholderName: 'MICHAEL JORDAN',
+      expiryDate: '08/28', creditLimit: 50000, currentBalance: 11200, availableCredit: 38800,
+      minimumPayment: 224, status: 'active', disputes: 0 },
+
+    // Jake Williams — frozen debit
+    { userId: jake._id, customerDisplayId: 'CUST-010', customerName: 'Jake Williams',
+      cardType: 'debit',  network: 'Visa',       maskedNumber: '****2209', cardholderName: 'JAKE WILLIAMS',
+      expiryDate: '06/27', currentBalance: 0, status: 'frozen', disputes: 1 },
+
+    // Sarah Davis — active debit, expiring credit
+    { userId: sarah._id, customerDisplayId: 'CUST-011', customerName: 'Sarah Davis',
+      cardType: 'debit',  network: 'Mastercard', maskedNumber: '****9921', cardholderName: 'SARAH DAVIS',
+      expiryDate: '03/28', currentBalance: 14700, status: 'active', disputes: 0 },
+    { userId: sarah._id, customerDisplayId: 'CUST-011', customerName: 'Sarah Davis',
+      cardType: 'credit', network: 'Visa',       maskedNumber: '****1144', cardholderName: 'SARAH DAVIS',
+      expiryDate: '06/26', creditLimit: 15000, currentBalance: 4200, availableCredit: 10800,
+      minimumPayment: 84, status: 'expiring', disputes: 0 },
+
+    // Robert Brown — active debit
+    { userId: robert._id, customerDisplayId: 'CUST-012', customerName: 'Robert Brown',
+      cardType: 'debit',  network: 'Visa',       maskedNumber: '****6678', cardholderName: 'ROBERT BROWN',
+      expiryDate: '10/28', currentBalance: 27300, status: 'active', disputes: 0 },
   ]);
 
   // ── Ledger entries for Jan–Apr 2026 ──────────────────────────────────────
@@ -286,6 +339,81 @@ async function seed(): Promise<void> {
     { userId: nayana._id, displayId: 'CUST-006', name: 'Nayana Rajan', accountNo: '****5541', accountType: 'checking', date: d(2026,4,10), entryType: 'debit',  category: 'ach_transfer',     description: 'ACH – Rent Payment Apr',          amount: 1800, balance: 33210 },
     { userId: nayana._id, displayId: 'CUST-006', name: 'Nayana Rajan', accountNo: '****5541', accountType: 'checking', date: d(2026,4,15), entryType: 'debit',  category: 'loan_payment',     description: 'Personal Loan EMI – Apr',         amount: 890,  balance: 32320 },
     { userId: nayana._id, displayId: 'CUST-006', name: 'Nayana Rajan', accountNo: '****5541', accountType: 'checking', date: d(2026,4,25), entryType: 'debit',  category: 'utility_payment',  description: 'Internet & Mobile Bill – Apr',    amount: 320,  balance: 31000 },
+
+    // ── JAMES SMITH (CUST-007) ───────────────────────────────────────
+    { userId: james._id, displayId: 'CUST-007', name: 'James Smith', accountNo: '****3301', accountType: 'checking', date: d(2026,1,5),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Jan 2026',        amount: 9500,  balance: 14500 },
+    { userId: james._id, displayId: 'CUST-007', name: 'James Smith', accountNo: '****3301', accountType: 'checking', date: d(2026,1,12), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Mortgage Payment Jan',      amount: 2800,  balance: 11700 },
+    { userId: james._id, displayId: 'CUST-007', name: 'James Smith', accountNo: '****3301', accountType: 'checking', date: d(2026,1,18), entryType: 'debit',  category: 'utility_payment', description: 'Electric & Gas – Jan',            amount: 245,   balance: 11455 },
+    { userId: james._id, displayId: 'CUST-007', name: 'James Smith', accountNo: '****3301', accountType: 'checking', date: d(2026,2,5),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Feb 2026',        amount: 9500,  balance: 20955 },
+    { userId: james._id, displayId: 'CUST-007', name: 'James Smith', accountNo: '****3301', accountType: 'checking', date: d(2026,2,12), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Mortgage Payment Feb',      amount: 2800,  balance: 18155 },
+    { userId: james._id, displayId: 'CUST-007', name: 'James Smith', accountNo: '****3301', accountType: 'checking', date: d(2026,2,20), entryType: 'debit',  category: 'card_payment',    description: 'Credit Card Payment – Feb',       amount: 1500,  balance: 16655 },
+    { userId: james._id, displayId: 'CUST-007', name: 'James Smith', accountNo: '****3301', accountType: 'checking', date: d(2026,3,5),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Mar 2026',        amount: 9500,  balance: 26155 },
+    { userId: james._id, displayId: 'CUST-007', name: 'James Smith', accountNo: '****3301', accountType: 'checking', date: d(2026,3,12), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Mortgage Payment Mar',      amount: 2800,  balance: 23355 },
+    { userId: james._id, displayId: 'CUST-007', name: 'James Smith', accountNo: '****3301', accountType: 'checking', date: d(2026,3,22), entryType: 'debit',  category: 'wire_transfer',   description: 'Wire – Business Investment',      amount: 5000,  balance: 18355 },
+    { userId: james._id, displayId: 'CUST-007', name: 'James Smith', accountNo: '****3301', accountType: 'checking', date: d(2026,4,5),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Apr 2026',        amount: 9500,  balance: 27855 },
+    { userId: james._id, displayId: 'CUST-007', name: 'James Smith', accountNo: '****3301', accountType: 'checking', date: d(2026,4,12), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Mortgage Payment Apr',      amount: 2800,  balance: 25055 },
+    { userId: james._id, displayId: 'CUST-007', name: 'James Smith', accountNo: '****3301', accountType: 'checking', date: d(2026,4,25), entryType: 'debit',  category: 'withdrawal',      description: 'ATM Withdrawal – Apr',            amount: 600,   balance: 18500 },
+
+    // ── EMILY JOHNSON (CUST-008) ─────────────────────────────────────
+    { userId: emily._id, displayId: 'CUST-008', name: 'Emily Johnson', accountNo: '****4412', accountType: 'checking', date: d(2026,1,3),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Jan 2026',        amount: 6800,  balance: 8800 },
+    { userId: emily._id, displayId: 'CUST-008', name: 'Emily Johnson', accountNo: '****4412', accountType: 'checking', date: d(2026,1,10), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Rent Payment Jan',          amount: 1900,  balance: 6900 },
+    { userId: emily._id, displayId: 'CUST-008', name: 'Emily Johnson', accountNo: '****4412', accountType: 'checking', date: d(2026,1,20), entryType: 'debit',  category: 'utility_payment', description: 'Internet & Cable – Jan',          amount: 145,   balance: 6755 },
+    { userId: emily._id, displayId: 'CUST-008', name: 'Emily Johnson', accountNo: '****4412', accountType: 'checking', date: d(2026,2,3),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Feb 2026',        amount: 6800,  balance: 13555 },
+    { userId: emily._id, displayId: 'CUST-008', name: 'Emily Johnson', accountNo: '****4412', accountType: 'checking', date: d(2026,2,10), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Rent Payment Feb',          amount: 1900,  balance: 11655 },
+    { userId: emily._id, displayId: 'CUST-008', name: 'Emily Johnson', accountNo: '****4412', accountType: 'checking', date: d(2026,2,18), entryType: 'debit',  category: 'zelle',           description: 'Zelle – Split Dinner with Friends', amount: 85,  balance: 11570 },
+    { userId: emily._id, displayId: 'CUST-008', name: 'Emily Johnson', accountNo: '****4412', accountType: 'checking', date: d(2026,3,3),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Mar 2026',        amount: 6800,  balance: 18370 },
+    { userId: emily._id, displayId: 'CUST-008', name: 'Emily Johnson', accountNo: '****4412', accountType: 'checking', date: d(2026,3,10), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Rent Payment Mar',          amount: 1900,  balance: 16470 },
+    { userId: emily._id, displayId: 'CUST-008', name: 'Emily Johnson', accountNo: '****4412', accountType: 'checking', date: d(2026,3,25), entryType: 'debit',  category: 'card_payment',    description: 'Credit Card Dispute Charge',      amount: 320,   balance: 16150 },
+    { userId: emily._id, displayId: 'CUST-008', name: 'Emily Johnson', accountNo: '****4412', accountType: 'checking', date: d(2026,4,3),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Apr 2026',        amount: 6800,  balance: 22950 },
+    { userId: emily._id, displayId: 'CUST-008', name: 'Emily Johnson', accountNo: '****4412', accountType: 'checking', date: d(2026,4,10), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Rent Payment Apr',          amount: 1900,  balance: 21050 },
+    { userId: emily._id, displayId: 'CUST-008', name: 'Emily Johnson', accountNo: '****4412', accountType: 'checking', date: d(2026,4,22), entryType: 'debit',  category: 'withdrawal',      description: 'ATM Withdrawal – Apr',            amount: 300,   balance: 9200 },
+
+    // ── MICHAEL JORDAN (CUST-009) ────────────────────────────────────
+    { userId: michael._id, displayId: 'CUST-009', name: 'Michael Jordan', accountNo: '****8810', accountType: 'checking', date: d(2026,1,5),  entryType: 'credit', category: 'payroll',        description: 'Salary Credit – Jan 2026',        amount: 14000, balance: 35000 },
+    { userId: michael._id, displayId: 'CUST-009', name: 'Michael Jordan', accountNo: '****8810', accountType: 'checking', date: d(2026,1,10), entryType: 'debit',  category: 'ach_transfer',   description: 'ACH – Mortgage Payment Jan',      amount: 4200,  balance: 30800 },
+    { userId: michael._id, displayId: 'CUST-009', name: 'Michael Jordan', accountNo: '****8810', accountType: 'checking', date: d(2026,1,18), entryType: 'debit',  category: 'wire_transfer',  description: 'Wire – Sports Foundation Donation', amount: 5000, balance: 25800 },
+    { userId: michael._id, displayId: 'CUST-009', name: 'Michael Jordan', accountNo: '****8810', accountType: 'checking', date: d(2026,2,5),  entryType: 'credit', category: 'payroll',        description: 'Salary Credit – Feb 2026',        amount: 14000, balance: 39800 },
+    { userId: michael._id, displayId: 'CUST-009', name: 'Michael Jordan', accountNo: '****8810', accountType: 'checking', date: d(2026,2,10), entryType: 'debit',  category: 'ach_transfer',   description: 'ACH – Mortgage Payment Feb',      amount: 4200,  balance: 35600 },
+    { userId: michael._id, displayId: 'CUST-009', name: 'Michael Jordan', accountNo: '****8810', accountType: 'checking', date: d(2026,3,5),  entryType: 'credit', category: 'payroll',        description: 'Salary Credit – Mar 2026',        amount: 14000, balance: 49600 },
+    { userId: michael._id, displayId: 'CUST-009', name: 'Michael Jordan', accountNo: '****8810', accountType: 'checking', date: d(2026,3,10), entryType: 'debit',  category: 'ach_transfer',   description: 'ACH – Mortgage Payment Mar',      amount: 4200,  balance: 45400 },
+    { userId: michael._id, displayId: 'CUST-009', name: 'Michael Jordan', accountNo: '****8810', accountType: 'checking', date: d(2026,3,20), entryType: 'debit',  category: 'vendor_payment', description: 'Vendor – Event Management Co.',   amount: 8000,  balance: 37400 },
+    { userId: michael._id, displayId: 'CUST-009', name: 'Michael Jordan', accountNo: '****8810', accountType: 'checking', date: d(2026,4,5),  entryType: 'credit', category: 'payroll',        description: 'Salary Credit – Apr 2026',        amount: 14000, balance: 51400 },
+    { userId: michael._id, displayId: 'CUST-009', name: 'Michael Jordan', accountNo: '****8810', accountType: 'checking', date: d(2026,4,10), entryType: 'debit',  category: 'ach_transfer',   description: 'ACH – Mortgage Payment Apr',      amount: 4200,  balance: 47200 },
+    { userId: michael._id, displayId: 'CUST-009', name: 'Michael Jordan', accountNo: '****8810', accountType: 'checking', date: d(2026,4,28), entryType: 'debit',  category: 'card_payment',   description: 'Credit Card Payment – Apr',       amount: 5200,  balance: 42000 },
+
+    // ── JAKE WILLIAMS (CUST-010) — minimal (account frozen Mar 2026) ──
+    { userId: jake._id, displayId: 'CUST-010', name: 'Jake Williams', accountNo: '****2209', accountType: 'checking', date: d(2026,1,5),  entryType: 'credit', category: 'deposit',        description: 'Initial Deposit',                 amount: 5000,  balance: 5000 },
+    { userId: jake._id, displayId: 'CUST-010', name: 'Jake Williams', accountNo: '****2209', accountType: 'checking', date: d(2026,2,3),  entryType: 'credit', category: 'payroll',        description: 'Salary Credit – Feb 2026',        amount: 4500,  balance: 9500 },
+    { userId: jake._id, displayId: 'CUST-010', name: 'Jake Williams', accountNo: '****2209', accountType: 'checking', date: d(2026,2,20), entryType: 'debit',  category: 'withdrawal',     description: 'ATM Withdrawal',                  amount: 9500,  balance: 0 },
+    { userId: jake._id, displayId: 'CUST-010', name: 'Jake Williams', accountNo: '****2209', accountType: 'checking', date: d(2026,3,1),  entryType: 'debit',  category: 'fee',            description: 'Account Freeze – Fraud Hold',     amount: 0,     balance: 0 },
+
+    // ── SARAH DAVIS (CUST-011) ───────────────────────────────────────
+    { userId: sarah._id, displayId: 'CUST-011', name: 'Sarah Davis', accountNo: '****9921', accountType: 'checking', date: d(2026,1,5),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Jan 2026',        amount: 7500,  balance: 11500 },
+    { userId: sarah._id, displayId: 'CUST-011', name: 'Sarah Davis', accountNo: '****9921', accountType: 'checking', date: d(2026,1,10), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Rent Payment Jan',          amount: 1750,  balance: 9750 },
+    { userId: sarah._id, displayId: 'CUST-011', name: 'Sarah Davis', accountNo: '****9921', accountType: 'checking', date: d(2026,1,22), entryType: 'debit',  category: 'loan_payment',    description: 'Car Loan EMI – Jan',              amount: 650,   balance: 9100 },
+    { userId: sarah._id, displayId: 'CUST-011', name: 'Sarah Davis', accountNo: '****9921', accountType: 'checking', date: d(2026,2,5),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Feb 2026',        amount: 7500,  balance: 16600 },
+    { userId: sarah._id, displayId: 'CUST-011', name: 'Sarah Davis', accountNo: '****9921', accountType: 'checking', date: d(2026,2,10), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Rent Payment Feb',          amount: 1750,  balance: 14850 },
+    { userId: sarah._id, displayId: 'CUST-011', name: 'Sarah Davis', accountNo: '****9921', accountType: 'checking', date: d(2026,2,22), entryType: 'debit',  category: 'loan_payment',    description: 'Car Loan EMI – Feb',              amount: 650,   balance: 14200 },
+    { userId: sarah._id, displayId: 'CUST-011', name: 'Sarah Davis', accountNo: '****9921', accountType: 'checking', date: d(2026,3,5),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Mar 2026',        amount: 7500,  balance: 21700 },
+    { userId: sarah._id, displayId: 'CUST-011', name: 'Sarah Davis', accountNo: '****9921', accountType: 'checking', date: d(2026,3,10), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Rent Payment Mar',          amount: 1750,  balance: 19950 },
+    { userId: sarah._id, displayId: 'CUST-011', name: 'Sarah Davis', accountNo: '****9921', accountType: 'checking', date: d(2026,3,18), entryType: 'debit',  category: 'zelle',           description: 'Zelle – School Fundraiser',       amount: 200,   balance: 19750 },
+    { userId: sarah._id, displayId: 'CUST-011', name: 'Sarah Davis', accountNo: '****9921', accountType: 'checking', date: d(2026,4,5),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Apr 2026',        amount: 7500,  balance: 27250 },
+    { userId: sarah._id, displayId: 'CUST-011', name: 'Sarah Davis', accountNo: '****9921', accountType: 'checking', date: d(2026,4,10), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Rent Payment Apr',          amount: 1750,  balance: 25500 },
+    { userId: sarah._id, displayId: 'CUST-011', name: 'Sarah Davis', accountNo: '****9921', accountType: 'checking', date: d(2026,4,22), entryType: 'debit',  category: 'loan_payment',    description: 'Car Loan EMI – Apr',              amount: 650,   balance: 14700 },
+
+    // ── ROBERT BROWN (CUST-012) ──────────────────────────────────────
+    { userId: robert._id, displayId: 'CUST-012', name: 'Robert Brown', accountNo: '****6678', accountType: 'checking', date: d(2026,1,5),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Jan 2026',        amount: 11000, balance: 18000 },
+    { userId: robert._id, displayId: 'CUST-012', name: 'Robert Brown', accountNo: '****6678', accountType: 'checking', date: d(2026,1,12), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Mortgage Payment Jan',      amount: 3100,  balance: 14900 },
+    { userId: robert._id, displayId: 'CUST-012', name: 'Robert Brown', accountNo: '****6678', accountType: 'checking', date: d(2026,1,20), entryType: 'debit',  category: 'utility_payment', description: 'Utilities – Water & Electric',    amount: 310,   balance: 14590 },
+    { userId: robert._id, displayId: 'CUST-012', name: 'Robert Brown', accountNo: '****6678', accountType: 'checking', date: d(2026,2,5),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Feb 2026',        amount: 11000, balance: 25590 },
+    { userId: robert._id, displayId: 'CUST-012', name: 'Robert Brown', accountNo: '****6678', accountType: 'checking', date: d(2026,2,12), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Mortgage Payment Feb',      amount: 3100,  balance: 22490 },
+    { userId: robert._id, displayId: 'CUST-012', name: 'Robert Brown', accountNo: '****6678', accountType: 'checking', date: d(2026,2,22), entryType: 'debit',  category: 'wire_transfer',   description: 'Wire – Investment Transfer',      amount: 4000,  balance: 18490 },
+    { userId: robert._id, displayId: 'CUST-012', name: 'Robert Brown', accountNo: '****6678', accountType: 'checking', date: d(2026,3,5),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Mar 2026',        amount: 11000, balance: 29490 },
+    { userId: robert._id, displayId: 'CUST-012', name: 'Robert Brown', accountNo: '****6678', accountType: 'checking', date: d(2026,3,12), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Mortgage Payment Mar',      amount: 3100,  balance: 26390 },
+    { userId: robert._id, displayId: 'CUST-012', name: 'Robert Brown', accountNo: '****6678', accountType: 'checking', date: d(2026,3,28), entryType: 'debit',  category: 'withdrawal',      description: 'ATM Withdrawal – Mar',            amount: 800,   balance: 25590 },
+    { userId: robert._id, displayId: 'CUST-012', name: 'Robert Brown', accountNo: '****6678', accountType: 'checking', date: d(2026,4,5),  entryType: 'credit', category: 'payroll',         description: 'Salary Credit – Apr 2026',        amount: 11000, balance: 36590 },
+    { userId: robert._id, displayId: 'CUST-012', name: 'Robert Brown', accountNo: '****6678', accountType: 'checking', date: d(2026,4,12), entryType: 'debit',  category: 'ach_transfer',    description: 'ACH – Mortgage Payment Apr',      amount: 3100,  balance: 33490 },
+    { userId: robert._id, displayId: 'CUST-012', name: 'Robert Brown', accountNo: '****6678', accountType: 'checking', date: d(2026,4,25), entryType: 'debit',  category: 'card_payment',    description: 'Credit Card Payment – Apr',       amount: 6200,  balance: 27300 },
   ];
 
   // Insert all ledger entries with auto-generated refs
