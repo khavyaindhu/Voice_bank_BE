@@ -303,6 +303,11 @@ function getScreenLabel(screen: string): string {
     'cards': 'Cards',
     'loans': 'Loans',
     'loans/apply': 'Loan Application',
+    'staff/dashboard': 'Staff Dashboard',
+    'staff/customers': 'Customer Search',
+    'staff/fms': 'FMS Account Lookup',
+    'staff/cards': 'Card Services',
+    'staff/reports': 'Reports',
   };
   return labels[screen] ?? screen;
 }
@@ -324,24 +329,51 @@ interface NavIntent {
   label: string;
 }
 
-const navIntents: NavIntent[] = [
-  { patterns: [/go\s*to\s*wire|open\s*wire|wire\s*transfer\s*page|navigate.*wire/i], route: '/payments/wire', label: 'Wire Transfer' },
-  { patterns: [/go\s*to\s*ach|open\s*ach|ach\s*transfer\s*page|navigate.*ach/i], route: '/payments/ach', label: 'ACH Transfer' },
-  { patterns: [/go\s*to\s*zelle|open\s*zelle|zelle\s*page|navigate.*zelle/i], route: '/payments/zelle', label: 'Zelle' },
-  { patterns: [/go\s*to\s*card\s*pay|open\s*card\s*pay|card\s*payment\s*page/i], route: '/payments/card', label: 'Card Payment' },
-  { patterns: [/go\s*to\s*history|payment\s*history\s*page|transaction\s*history\s*page/i], route: '/payments/history', label: 'Payment History' },
-  { patterns: [/go\s*to\s*dashboard|open\s*dashboard|navigate.*dashboard|go\s*home/i], route: '/dashboard', label: 'Dashboard' },
-  { patterns: [/go\s*to\s*accounts|open\s*accounts|navigate.*accounts|my\s*accounts\s*page/i], route: '/accounts', label: 'Accounts' },
-  { patterns: [/go\s*to\s*cards|open\s*cards|navigate.*cards|my\s*cards\s*page/i], route: '/cards', label: 'Cards' },
-  { patterns: [/go\s*to\s*loans|open\s*loans|navigate.*loans|my\s*loans\s*page/i], route: '/loans', label: 'Loans' },
-  { patterns: [/apply.*loan|go\s*to\s*loan\s*appl|open\s*loan\s*appl/i], route: '/loans/apply', label: 'Loan Application' },
-  { patterns: [/go\s*to\s*payments|open\s*payments|navigate.*payments/i], route: '/payments/ach', label: 'Payments' },
+const customerNavIntents: NavIntent[] = [
+  { patterns: [/wire/i], route: '/payments/wire', label: 'Wire Transfer' },
+  { patterns: [/\bach\b|ach\s*transfer/i], route: '/payments/ach', label: 'ACH Transfer' },
+  { patterns: [/zelle/i], route: '/payments/zelle', label: 'Zelle' },
+  { patterns: [/card\s*pay|card\s*payment/i], route: '/payments/card', label: 'Card Payment' },
+  { patterns: [/history|past\s*trans|transaction\s*history/i], route: '/payments/history', label: 'Payment History' },
+  { patterns: [/dashboard|go\s*home|home/i], route: '/dashboard', label: 'Dashboard' },
+  { patterns: [/accounts?|my\s*account/i], route: '/accounts', label: 'Accounts' },
+  { patterns: [/cards?|my\s*card/i], route: '/cards', label: 'Cards' },
+  { patterns: [/loans?|my\s*loan/i], route: '/loans', label: 'Loans' },
+  { patterns: [/apply.*loan|loan.*appl/i], route: '/loans/apply', label: 'Loan Application' },
+  { patterns: [/payments?/i], route: '/payments/ach', label: 'Payments' },
 ];
 
-function findNavIntent(message: string): NavIntent | null {
+const staffNavIntents: NavIntent[] = [
+  { patterns: [/staff\s*dashboard|dashboard|home|overview/i], route: '/staff/dashboard', label: 'Staff Dashboard' },
+  { patterns: [/customer\s*search|search\s*customers?|customer\s*lookup|client\s*lookup/i], route: '/staff/customers', label: 'Customer Search' },
+  { patterns: [/\bfms\b|fms\s*accounts?|ledger/i], route: '/staff/fms', label: 'FMS Account Lookup' },
+  { patterns: [/\bcards?\b(?!\s*(?:pay|payment))|card\s*services?|card\s*management|card\s*admin/i], route: '/staff/cards', label: 'Card Services' },
+  { patterns: [/reports?|reporting|analytics/i], route: '/staff/reports', label: 'Reports' },
+];
+
+const navPrefix = /^(?:maya\s+)?(?:(?:can|could|would|will)\s+you\s+)?(?:please\s+|kindly\s+|just\s+)?(?:go\s*to|open|take\s*me\s*to|navigate\s*to|show\s*me|show|switch\s*to|change\s*to|move\s*to|jump\s*to|load|visit|bring\s*up)\b/i;
+
+function normalizeNavMessage(message: string): string {
+  return message
+    .toLowerCase()
+    .replace(/[^\w\s&/-]/g, ' ')
+    .replace(/\b(?:please|kindly|just|the|a|an|tab|screen|page|section|menu|module)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function findNavIntent(message: string, screen: string): NavIntent | null {
   const lower = message.toLowerCase().trim();
+  const hasNavCue = navPrefix.test(lower) || /\b(?:tab|screen|page|section|menu|module)\b/i.test(lower);
+  if (!hasNavCue) return null;
+
+  const normalized = normalizeNavMessage(lower);
+  const navIntents = screen.startsWith('staff/')
+    ? [...staffNavIntents, ...customerNavIntents]
+    : customerNavIntents;
+
   for (const nav of navIntents) {
-    if (nav.patterns.some(p => p.test(lower))) return nav;
+    if (nav.patterns.some(p => p.test(normalized))) return nav;
   }
   return null;
 }
@@ -360,7 +392,7 @@ export async function chat(
   const lastMessage = messages[messages.length - 1]?.content ?? '';
 
   // 1. Check for navigation intent first
-  const navMatch = findNavIntent(lastMessage);
+  const navMatch = findNavIntent(lastMessage, context.screen);
   if (navMatch) {
     return {
       text: `Sure! Taking you to the **${navMatch.label}** screen now. 🚀\n\nOnce you're there, feel free to ask me anything about it!`,
