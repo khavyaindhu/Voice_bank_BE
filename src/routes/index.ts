@@ -7,6 +7,7 @@ import loansRoutes from './loans.routes';
 import chatRoutes from './chat.routes';
 import payeesRoutes from './payees.routes';
 import staffRoutes from './staff.routes';
+import translateRoutes from './translate.routes';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/loans', loansRoutes);
 router.use('/chat', chatRoutes);
 router.use('/payees', payeesRoutes);
 router.use('/staff', staffRoutes);
+router.use('/translate', translateRoutes);
 
 export default router;
