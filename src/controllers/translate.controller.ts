@@ -5,6 +5,8 @@ import { translateText, SUPPORTED_LANGUAGES } from '../services/translation.serv
 export async function translate(req: AuthRequest, res: Response): Promise<void> {
   const { text, language } = req.body;
 
+  console.log('[translate] request received', { language, textLen: text?.length });
+
   if (!text?.trim()) {
     res.status(400).json({ message: 'text is required' });
     return;
@@ -17,9 +19,11 @@ export async function translate(req: AuthRequest, res: Response): Promise<void> 
 
   try {
     const translatedText = await translateText(text, language);
+    console.log('[translate] success', { language, resultLen: translatedText?.length });
     res.json({ translatedText, language });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Translation failed';
+    console.error('[translate] error:', msg);
     res.status(500).json({ message: msg });
   }
 }

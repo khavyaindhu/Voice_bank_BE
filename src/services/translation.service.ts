@@ -13,6 +13,7 @@ export async function translateText(text: string, targetLangCode: string): Promi
   if (targetLangCode === 'en' || !SUPPORTED_LANGUAGES[targetLangCode]) return text;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
+  console.log('[translateText] apiKey present:', !!apiKey, '| lang:', targetLangCode);
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY environment variable is not set');
 
   const languageName = SUPPORTED_LANGUAGES[targetLangCode];
