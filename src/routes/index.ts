@@ -9,6 +9,7 @@ import payeesRoutes from './payees.routes';
 import staffRoutes from './staff.routes';
 import translateRoutes from './translate.routes';
 import ttsRoutes from './tts.routes';
+import configRoutes from './config.routes';
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use('/payees', payeesRoutes);
 router.use('/staff', staffRoutes);
 router.use('/translate', translateRoutes);
 router.use('/tts', ttsRoutes);
+router.use('/config', configRoutes);
 
 export default router;
