@@ -59,3 +59,48 @@ export async function translateText(text: string, targetLangCode: string): Promi
   const block = data.content?.[0];
   return block?.type === 'text' ? block.text : text;
 }
+
+export async function translateCommandToEnglish(text: string, sourceLangCode: string): Promise<string> {
+  if (!text.trim()) return text;
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  console.log('[translateCommandToEnglish] apiKey present:', !!apiKey, '| source:', sourceLangCode);
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY environment variable is not set');
+
+  const sourceLanguage = SUPPORTED_LANGUAGES[sourceLangCode] ?? 'the user selected language';
+  const prompt =
+    `Convert this banking app command from ${sourceLanguage} to concise English so an existing English intent parser can understand it.\n\n` +
+    `Rules:\n` +
+    `1. Return ONLY the English command. No explanation, no quotes, no markdown.\n` +
+    `2. Preserve names, customer IDs, account numbers, amounts, dates, and banking acronyms exactly when possible.\n` +
+    `3. Convert number words to digits when useful, e.g. five hundred -> $500 if the user means money.\n` +
+    `4. Preserve banking terms such as ACH, Wire, Zelle, FMS, Reports, Card Services, Dashboard.\n` +
+    `5. If the input is already English, return it cleaned up in English.\n\n` +
+    `Command:\n${text}`;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const response = await (globalThis as any).fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 256,
+      temperature: 0,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Anthropic API error ${response.status}: ${errText}`);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = await response.json() as { content: Array<{ type: string; text: string }> };
+  const block = data.content?.[0];
+  return block?.type === 'text' ? block.text.trim() : text;
+}
