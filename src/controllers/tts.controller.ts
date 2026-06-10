@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import { synthesizeSpeech, isGoogleTtsConfigured } from '../services/tts.service';
+import { synthesizeSpeech, synthesizeWithTranslateTts, isGoogleTtsConfigured } from '../services/tts.service';
 
 const SUPPORTED_LANG_CODES = ['en', 'hi', 'ta', 'kn', 'es'];
 
@@ -17,18 +17,24 @@ export async function tts(req: AuthRequest, res: Response): Promise<void> {
     return;
   }
 
-  if (!isGoogleTtsConfigured()) {
-    // Return a clear signal so the FE can fallback to Web Speech API
-    res.status(503).json({ message: 'Google TTS not configured — use browser fallback', fallback: true });
-    return;
+  if (isGoogleTtsConfigured()) {
+    try {
+      const result = await synthesizeSpeech(text, langCode);
+      res.json({ audioContent: result.audioContent, voiceName: result.voiceName });
+      return;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'TTS synthesis failed';
+      console.error('[tts controller] Google Cloud TTS failed, trying keyless fallback:', msg);
+    }
   }
 
   try {
-    const result = await synthesizeSpeech(text, langCode);
+    const result = await synthesizeWithTranslateTts(text, langCode);
     res.json({ audioContent: result.audioContent, voiceName: result.voiceName });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'TTS synthesis failed';
     console.error('[tts controller] error:', msg);
+    // Clear signal so the FE can fall back to the browser's Web Speech API
     res.status(500).json({ message: msg, fallback: true });
   }
 }
