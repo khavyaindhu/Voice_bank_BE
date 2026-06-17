@@ -8,6 +8,7 @@ import Card from './models/Card';
 import Loan from './models/Loan';
 import Transaction from './models/Transaction';
 import Payee from './models/Payee';
+import RecurringBucket from './models/RecurringBucket';
 import LedgerEntry from './models/LedgerEntry';
 
 // ── Date helpers ─────────────────────────────────────────────────────────────
@@ -29,6 +30,7 @@ async function seed(): Promise<void> {
     Loan.deleteMany({}),
     Transaction.deleteMany({}),
     Payee.deleteMany({}),
+    RecurringBucket.deleteMany({}),
     LedgerEntry.deleteMany({}),
   ]);
 
@@ -98,13 +100,87 @@ async function seed(): Promise<void> {
     { userId: user._id, type: 'zelle',        status: 'completed', amount: 150,  fromAccount: checking.maskedNumber, recipientName: 'sara@example.com',                         memo: 'Concert tickets',  referenceNumber: 'ZEL-K1L2-006',  completedAt: new Date(txBase.getTime() - 14*86400000) },
   ]);
 
-  await Payee.create([
+  const payees = await Payee.create([
     { userId: user._id, nickname: 'Vijaya',          fullName: 'Vijaya Krishnamurthy',        bankName: 'Chase Bank',        routingNumber: '021000021', accountNumber: '4521789012', accountType: 'checking', transferType: 'wire', category: 'business', avatarColor: '#002E6D', lastPaidAmount: 12500, lastPaidDate: new Date('2024-12-15'), totalTransfers: 8 },
     { userId: user._id, nickname: 'Father',           fullName: 'Ramesh Venkataraman',         bankName: 'Wells Fargo',       routingNumber: '121000248', accountNumber: '9876543210', accountType: 'savings',  transferType: 'ach',  category: 'family',   avatarColor: '#BE185D', lastPaidAmount: 500,   lastPaidDate: new Date('2025-01-02'), totalTransfers: 24 },
     { userId: user._id, nickname: 'Metro Properties', fullName: 'Metro Properties Group Inc',  bankName: 'Bank of America',   routingNumber: '026009593', accountNumber: '1122334455', accountType: 'checking', transferType: 'ach',  category: 'business', avatarColor: '#CC0000', lastPaidAmount: 2200,  lastPaidDate: new Date('2025-01-01'), totalTransfers: 12 },
     { userId: user._id, nickname: 'Tech Solutions',   fullName: 'Tech Solutions Inc',          bankName: 'Citibank',          routingNumber: '021000089', accountNumber: '5566778899', accountType: 'checking', transferType: 'wire', category: 'business', avatarColor: '#1D4ED8', lastPaidAmount: 8750,  lastPaidDate: new Date('2024-11-28'), totalTransfers: 5 },
     { userId: user._id, nickname: 'City Utilities',   fullName: 'City Utility Services Corp',  bankName: 'U.S. Bank',         routingNumber: '091000022', accountNumber: '3344556677', accountType: 'checking', transferType: 'ach',  category: 'utility',  avatarColor: '#059669', lastPaidAmount: 185,   lastPaidDate: new Date('2025-01-05'), totalTransfers: 18 },
+    { userId: user._id, nickname: 'Car Loan',         fullName: 'Toyota Financial Services',     bankName: 'Wells Fargo',       routingNumber: '121000248', accountNumber: '2233445566', accountType: 'checking', transferType: 'ach',  category: 'business', avatarColor: '#D97706', totalTransfers: 0 },
+    { userId: user._id, nickname: 'Mobile Plan',      fullName: 'Verizon Wireless',              bankName: 'Chase Bank',        routingNumber: '021000021', accountNumber: '6677889900', accountType: 'checking', transferType: 'ach',  category: 'utility',  avatarColor: '#0891B2', totalTransfers: 0 },
+    { userId: user._id, nickname: 'Netflix',          fullName: 'Netflix Inc',                   bankName: 'Silicon Valley Bank', routingNumber: '121140399', accountNumber: '7788990011', accountType: 'checking', transferType: 'ach',  category: 'business', avatarColor: '#E50914', totalTransfers: 0 },
+    { userId: user._id, nickname: 'Hotstar',          fullName: 'Disney Hotstar India',          bankName: 'HDFC Bank',         routingNumber: '091000022', accountNumber: '8899001122', accountType: 'checking', transferType: 'ach',  category: 'business', avatarColor: '#1F80E0', totalTransfers: 0 },
+    { userId: user._id, nickname: 'Housing Society',  fullName: 'Green Valley Housing Society',  bankName: 'U.S. Bank',         routingNumber: '091000022', accountNumber: '9900112233', accountType: 'checking', transferType: 'ach',  category: 'utility',  avatarColor: '#16A34A', totalTransfers: 0 },
   ]);
+
+  const payeeId = (nickname: string) => payees.find(p => p.nickname === nickname)!._id;
+
+  await RecurringBucket.create({
+    userId: user._id,
+    name: 'Bucket A — Monthly Bills',
+    nickname: 'A',
+    description: 'Rent, EMIs, utilities, subscriptions, and society maintenance due every month.',
+    avatarColor: '#7C3AED',
+    items: [
+      {
+        name: 'House Rent',
+        category: 'rent',
+        amount: 2500,
+        payeeId: payeeId('Metro Properties'),
+        dayOfMonth: 1,
+        aliases: ['rent', 'house rent', 'home rent', 'apartment rent', 'landlord'],
+        notes: 'Paid to Metro Properties Group',
+      },
+      {
+        name: 'Car EMI',
+        category: 'emi',
+        amount: 450,
+        payeeId: payeeId('Car Loan'),
+        dayOfMonth: 5,
+        aliases: ['car', 'car emi', 'auto emi', 'auto loan', 'car loan'],
+      },
+      {
+        name: 'Mobile EMI',
+        category: 'emi',
+        amount: 89,
+        payeeId: payeeId('Mobile Plan'),
+        dayOfMonth: 8,
+        aliases: ['mobile', 'mobile emi', 'phone emi', 'phone bill', 'verizon'],
+      },
+      {
+        name: 'Electricity',
+        category: 'utility',
+        amount: 145,
+        payeeId: payeeId('City Utilities'),
+        dayOfMonth: 12,
+        aliases: ['electricity', 'power bill', 'electric', 'utility bill'],
+      },
+      {
+        name: 'Society Maintenance',
+        category: 'maintenance',
+        amount: 350,
+        payeeId: payeeId('Housing Society'),
+        dayOfMonth: 15,
+        aliases: ['maintenance', 'society maintenance', 'housing society', 'society charges'],
+      },
+      {
+        name: 'Netflix',
+        category: 'subscription',
+        amount: 15.99,
+        payeeId: payeeId('Netflix'),
+        dayOfMonth: 20,
+        aliases: ['netflix', 'netflix subscription'],
+      },
+      {
+        name: 'Hotstar',
+        category: 'subscription',
+        amount: 12.99,
+        payeeId: payeeId('Hotstar'),
+        dayOfMonth: 22,
+        aliases: ['hotstar', 'disney hotstar', 'hotstar subscription'],
+      },
+    ],
+  });
 
   // ── Staff customers (exist in DB for staff portal; no UI login needed) ────
   const [vijaya, ramesh, greenvalley, kavya, abcvendors, nayana,
@@ -433,6 +509,7 @@ async function seed(): Promise<void> {
   })));
 
   console.log(`✅ Seed complete — ${entries.length} ledger entries created`);
+  console.log('✅ Recurring Bucket A seeded (7 monthly bills)');
   console.log('Demo login — username: johndoe | password: Demo@1234');
   process.exit(0);
 }
