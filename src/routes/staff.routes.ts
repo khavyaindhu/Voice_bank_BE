@@ -5,6 +5,7 @@ import {
   getReportTransactions,
   getReportSummary,
   getReportDepartments,
+  getSpendingSummary,
   getReportCustomers,
 } from '../controllers/staff.controller';
 
@@ -18,6 +19,7 @@ router.patch('/cards/:id/freeze',    staffToggleFreeze);
 router.get('/reports/transactions',  getReportTransactions);
 router.get('/reports/summary',       getReportSummary);
 router.get('/reports/departments',   getReportDepartments);
+router.get('/reports/spending-summary', getSpendingSummary);
 router.get('/reports/customers',     getReportCustomers);
 
 export default router;

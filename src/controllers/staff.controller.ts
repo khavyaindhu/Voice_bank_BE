@@ -232,6 +232,71 @@ export async function getReportDepartments(req: Request, res: Response): Promise
   res.json({ departments: rows, dateRange: { from: start, to: end } });
 }
 
+/**
+ * GET /api/staff/reports/spending-summary
+ * Query: preset | from+to | customerId
+ *
+ * Category-wise activity breakdown for the spending-summary tab. Returns full
+ * activity (credits AND debits) grouped by category, overall totals, and the
+ * resolved customer (when a customerId filter is applied). Pure aggregation —
+ * no AI — so it is exact, fast, and free.
+ */
+export async function getSpendingSummary(req: Request, res: Response): Promise<void> {
+  const { preset, from, to, customerId } = req.query as Record<string, string>;
+  const { start, end } = getDateRange(preset, from, to);
+
+  const match: Record<string, unknown> = { date: { $gte: start, $lte: end } };
+  if (customerId && customerId !== 'all') match.customerDisplayId = customerId;
+
+  const [categories, totals] = await Promise.all([
+    LedgerEntry.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id:     '$category',
+          credits: { $sum: { $cond: [{ $eq: ['$entryType', 'credit'] }, '$amount', 0] } },
+          debits:  { $sum: { $cond: [{ $eq: ['$entryType', 'debit']  }, '$amount', 0] } },
+          count:   { $sum: 1 },
+        },
+      },
+      { $project: { _id: 0, category: '$_id', credits: 1, debits: 1, count: 1, total: { $add: ['$credits', '$debits'] } } },
+      { $sort: { total: -1 } },
+    ]),
+
+    LedgerEntry.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id:     null,
+          credits: { $sum: { $cond: [{ $eq: ['$entryType', 'credit'] }, '$amount', 0] } },
+          debits:  { $sum: { $cond: [{ $eq: ['$entryType', 'debit']  }, '$amount', 0] } },
+          txCount: { $sum: 1 },
+        },
+      },
+    ]),
+  ]);
+
+  // Resolve customer display name when filtered
+  let customer: { displayId: string; name: string } | null = null;
+  if (customerId && customerId !== 'all') {
+    const one = await LedgerEntry.findOne({ customerDisplayId: customerId }).select('customerDisplayId customerName');
+    customer = one ? { displayId: one.customerDisplayId, name: one.customerName } : { displayId: customerId, name: customerId };
+  }
+
+  const t = totals[0] ?? { credits: 0, debits: 0, txCount: 0 };
+  res.json({
+    categories,
+    totals: {
+      credits: t.credits,
+      debits:  t.debits,
+      net:     t.credits - t.debits,
+      txCount: t.txCount,
+    },
+    customer,
+    dateRange: { from: start, to: end },
+  });
+}
+
 /** GET /api/staff/reports/customers — distinct customer list for filter dropdown */
 export async function getReportCustomers(req: Request, res: Response): Promise<void> {
   const customers = await LedgerEntry.aggregate([
