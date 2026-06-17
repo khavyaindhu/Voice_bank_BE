@@ -99,10 +99,28 @@ export async function getPaymentHistory(req: AuthRequest, res: Response): Promis
   const filter: Record<string, unknown> = { userId: req.userId };
   if (type) filter['type'] = type;
 
-  const transactions = await Transaction.find(filter)
+  const rows = await Transaction.find(filter)
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
-    .limit(limit);
+    .limit(limit)
+    .lean();
+
+  const transactions = rows.map(row => ({
+    _id: row._id.toString(),
+    type: row.type,
+    status: row.status,
+    amount: Number(row.amount),
+    currency: row.currency ?? 'USD',
+    fromAccount: row.fromAccount,
+    toAccount: row.toAccount,
+    recipientName: row.recipientName,
+    recipientBank: row.recipientBank,
+    memo: row.memo,
+    referenceNumber: row.referenceNumber,
+    createdAt: row.createdAt,
+    completedAt: row.completedAt,
+  }));
+
   const total = await Transaction.countDocuments(filter);
   res.json({ transactions, total, page, pages: Math.ceil(total / limit) });
 }
