@@ -19,6 +19,8 @@ export interface ITransaction extends Document {
   referenceNumber: string;
   scheduledDate?: Date;
   completedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const TransactionSchema = new Schema<ITransaction>(
