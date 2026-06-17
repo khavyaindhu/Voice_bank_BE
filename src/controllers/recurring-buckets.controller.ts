@@ -38,7 +38,7 @@ function mapBucket(bucket: IRecurringBucket) {
 }
 
 async function createTransactionForPayee(
-  userId: mongoose.Types.ObjectId,
+  userId: string,
   payee: InstanceType<typeof Payee>,
   amount: number,
   fromAccount: string,
