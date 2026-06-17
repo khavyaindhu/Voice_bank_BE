@@ -1,6 +1,8 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import Payee from '../models/Payee';
+import Transaction from '../models/Transaction';
+import { genTransactionRef } from '../utils/transactionRef';
 
 const AVATAR_COLORS = [
   '#002E6D', '#CC0000', '#1D4ED8', '#059669',
@@ -108,3 +110,77 @@ export async function recordPayment(req: AuthRequest, res: Response): Promise<vo
   }
   res.json({ message: 'Payment recorded', totalTransfers: payee.totalTransfers });
 }
+
+/**
+ * POST /payees/:id/pay — execute Quick Pay: log transaction + update payee stats.
+ * Used by Maya voice Quick Pay and the Quick Pay page so every send appears in history.
+ */
+export async function sendPayeePayment(req: AuthRequest, res: Response): Promise<void> {
+  const { id } = req.params;
+  const { amount, fromAccount, memo } = req.body;
+
+  if (!fromAccount || amount == null) {
+    res.status(400).json({ message: 'fromAccount and amount are required' });
+    return;
+  }
+
+  const payee = await Payee.findOne({ _id: id, userId: req.userId });
+  if (!payee) {
+    res.status(404).json({ message: 'Payee not found' });
+    return;
+  }
+
+  const amt = parseFloat(amount);
+  if (!Number.isFinite(amt) || amt <= 0) {
+    res.status(400).json({ message: 'amount must be a positive number' });
+    return;
+  }
+
+  const txMemo = (memo?.trim() || `Quick Pay to ${payee.nickname}`);
+
+  let tx;
+  if (payee.transferType === 'wire') {
+    tx = await Transaction.create({
+      userId: req.userId,
+      type: 'wire',
+      status: 'processing',
+      amount: amt,
+      fromAccount,
+      recipientName: payee.fullName,
+      recipientBank: payee.bankName,
+      routingNumber: payee.routingNumber,
+      memo: txMemo,
+      referenceNumber: genTransactionRef('WIRE'),
+    });
+  } else {
+    tx = await Transaction.create({
+      userId: req.userId,
+      type: 'ach',
+      status: 'processing',
+      amount: amt,
+      fromAccount,
+      toAccount: payee.accountNumber,
+      recipientName: payee.fullName,
+      routingNumber: payee.routingNumber,
+      memo: txMemo,
+      referenceNumber: genTransactionRef('ACH'),
+      scheduledDate: new Date(),
+    });
+  }
+
+  const updated = await Payee.findOneAndUpdate(
+    { _id: id, userId: req.userId },
+    {
+      $set: { lastPaidAmount: amt, lastPaidDate: new Date() },
+      $inc: { totalTransfers: 1 },
+    },
+    { new: true }
+  );
+
+  res.status(201).json({
+    message: 'Payment sent',
+    transaction: tx,
+    totalTransfers: updated?.totalTransfers ?? payee.totalTransfers + 1,
+  });
+}
+

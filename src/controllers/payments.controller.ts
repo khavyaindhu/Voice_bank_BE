@@ -1,11 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import Transaction from '../models/Transaction';
-import { v4 as uuidv4 } from 'uuid';
-
-function genRef(prefix: string): string {
-  return `${prefix}-${uuidv4().split('-')[0].toUpperCase()}-${Date.now()}`;
-}
+import { genTransactionRef } from '../utils/transactionRef';
 
 export async function initiateACH(req: AuthRequest, res: Response): Promise<void> {
   const { fromAccount, toAccount, recipientName, routingNumber, amount, memo, scheduledDate } = req.body;
@@ -23,7 +19,7 @@ export async function initiateACH(req: AuthRequest, res: Response): Promise<void
     recipientName,
     routingNumber,
     memo,
-    referenceNumber: genRef('ACH'),
+    referenceNumber: genTransactionRef('ACH'),
     scheduledDate: scheduledDate ? new Date(scheduledDate) : new Date(),
   });
   res.status(201).json({ message: 'ACH transfer initiated', transaction: tx });
@@ -50,7 +46,7 @@ export async function initiateWire(req: AuthRequest, res: Response): Promise<voi
     routingNumber,
     swiftCode,
     memo,
-    referenceNumber: genRef('WIRE'),
+    referenceNumber: genTransactionRef('WIRE'),
   });
   res.status(201).json({ message: 'Wire transfer initiated', transaction: tx });
 }
@@ -70,7 +66,7 @@ export async function initiateZelle(req: AuthRequest, res: Response): Promise<vo
     toAccount: recipientContact,
     recipientName: recipientContact,
     memo,
-    referenceNumber: genRef('ZEL'),
+    referenceNumber: genTransactionRef('ZEL'),
     completedAt: new Date(),
   });
   res.status(201).json({ message: 'Zelle payment sent', transaction: tx });
@@ -90,7 +86,7 @@ export async function makeCardPayment(req: AuthRequest, res: Response): Promise<
     fromAccount,
     toAccount: cardId,
     memo: `Card payment – ${paymentType}`,
-    referenceNumber: genRef('CPY'),
+    referenceNumber: genTransactionRef('CPY'),
     completedAt: new Date(),
   });
   res.status(201).json({ message: 'Card payment successful', transaction: tx });
