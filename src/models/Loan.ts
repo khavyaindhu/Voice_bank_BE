@@ -14,6 +14,8 @@ export interface ILoan extends Document {
   status: 'active' | 'closed' | 'defaulted';
   loanNumber: string;
   lenderName: string;
+  /** Payee used for recurring EMI payments (e.g. Car Loan payee). */
+  linkedPayeeId?: mongoose.Types.ObjectId;
 }
 
 const LoanSchema = new Schema<ILoan>(
@@ -31,6 +33,7 @@ const LoanSchema = new Schema<ILoan>(
     status: { type: String, enum: ['active', 'closed', 'defaulted'], default: 'active' },
     loanNumber: { type: String, required: true, unique: true },
     lenderName: { type: String, default: 'U.S. Bank' },
+    linkedPayeeId: { type: Schema.Types.ObjectId, ref: 'Payee' },
   },
   { timestamps: true }
 );

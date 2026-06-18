@@ -10,11 +10,53 @@ import Transaction from './models/Transaction';
 import Payee from './models/Payee';
 import RecurringBucket from './models/RecurringBucket';
 import LedgerEntry from './models/LedgerEntry';
+import mongoose from 'mongoose';
 
 // ── Date helpers ─────────────────────────────────────────────────────────────
 
 function d(year: number, month: number, day: number): Date {
   return new Date(year, month - 1, day);
+}
+
+/** Generate monthly completed EMI transactions linked to a loan. */
+function seedEmiPayments(opts: {
+  userId: mongoose.Types.ObjectId;
+  loanId: mongoose.Types.ObjectId;
+  fromAccount: string;
+  toAccount?: string;
+  recipientName: string;
+  routingNumber?: string;
+  amount: number;
+  count: number;
+  startYear: number;
+  startMonth: number;
+  dayOfMonth: number;
+  memoPrefix: string;
+  refPrefix: string;
+}) {
+  const txs = [];
+  for (let i = 0; i < opts.count; i++) {
+    const monthIndex = opts.startMonth - 1 + i;
+    const year = opts.startYear + Math.floor(monthIndex / 12);
+    const month = (monthIndex % 12) + 1;
+    const date = d(year, month, opts.dayOfMonth);
+    const monthLabel = date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+    txs.push({
+      userId: opts.userId,
+      loanId: opts.loanId,
+      type: 'ach',
+      status: 'completed',
+      amount: opts.amount,
+      fromAccount: opts.fromAccount,
+      ...(opts.toAccount ? { toAccount: opts.toAccount } : {}),
+      recipientName: opts.recipientName,
+      ...(opts.routingNumber ? { routingNumber: opts.routingNumber } : {}),
+      memo: `${opts.memoPrefix} – ${monthLabel}`,
+      referenceNumber: `${opts.refPrefix}-${String(i + 1).padStart(3, '0')}`,
+      completedAt: date,
+    });
+  }
+  return txs;
 }
 
 // ── Main seed ────────────────────────────────────────────────────────────────
@@ -81,25 +123,6 @@ async function seed(): Promise<void> {
     },
   ]);
 
-  await Loan.create([{
-    userId: user._id, loanType: 'home',
-    principalAmount: 350000, outstandingBalance: 287500,
-    interestRate: 6.75, tenureMonths: 360, emiAmount: 2270.15,
-    nextDueDate: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000),
-    startDate: new Date('2020-03-01'), endDate: new Date('2050-03-01'),
-    status: 'active', loanNumber: 'LN-HOME-2020-4521',
-  }]);
-
-  const txBase = new Date();
-  await Transaction.create([
-    { userId: user._id, type: 'ach',          status: 'completed', amount: 500,  fromAccount: checking.maskedNumber, toAccount: '****8890', recipientName: 'Jane Smith',      routingNumber: '071000013', memo: 'Rent',             referenceNumber: 'ACH-A1B2-001', completedAt: new Date(txBase.getTime() - 1*86400000) },
-    { userId: user._id, type: 'zelle',        status: 'completed', amount: 75,   fromAccount: checking.maskedNumber, recipientName: 'mike@example.com',                         memo: 'Dinner split',      referenceNumber: 'ZEL-C3D4-002', completedAt: new Date(txBase.getTime() - 3*86400000) },
-    { userId: user._id, type: 'wire',         status: 'completed', amount: 2500, fromAccount: checking.maskedNumber, recipientName: 'Acme Corp',         recipientBank: 'Chase', memo: 'Invoice #1042',    referenceNumber: 'WIRE-E5F6-003', completedAt: new Date(txBase.getTime() - 5*86400000) },
-    { userId: user._id, type: 'card_payment', status: 'completed', amount: 500,  fromAccount: checking.maskedNumber,                                                             memo: 'Credit card pay',  referenceNumber: 'CPY-G7H8-004',  completedAt: new Date(txBase.getTime() - 7*86400000) },
-    { userId: user._id, type: 'ach',          status: 'completed', amount: 1200, fromAccount: savings.maskedNumber,  toAccount: '****3311', recipientName: 'City Utilities',    memo: 'Utility bill',     referenceNumber: 'ACH-I9J0-005',  completedAt: new Date(txBase.getTime() - 10*86400000) },
-    { userId: user._id, type: 'zelle',        status: 'completed', amount: 150,  fromAccount: checking.maskedNumber, recipientName: 'sara@example.com',                         memo: 'Concert tickets',  referenceNumber: 'ZEL-K1L2-006',  completedAt: new Date(txBase.getTime() - 14*86400000) },
-  ]);
-
   const payees = await Payee.create([
     { userId: user._id, nickname: 'Vijaya',          fullName: 'Vijaya Krishnamurthy',        bankName: 'Chase Bank',        routingNumber: '021000021', accountNumber: '4521789012', accountType: 'checking', transferType: 'wire', category: 'business', avatarColor: '#002E6D', lastPaidAmount: 12500, lastPaidDate: new Date('2024-12-15'), totalTransfers: 8 },
     { userId: user._id, nickname: 'Father',           fullName: 'Ramesh Venkataraman',         bankName: 'Wells Fargo',       routingNumber: '121000248', accountNumber: '9876543210', accountType: 'savings',  transferType: 'ach',  category: 'family',   avatarColor: '#BE185D', lastPaidAmount: 500,   lastPaidDate: new Date('2025-01-02'), totalTransfers: 24 },
@@ -114,6 +137,75 @@ async function seed(): Promise<void> {
   ]);
 
   const payeeId = (nickname: string) => payees.find(p => p.nickname === nickname)!._id;
+  const carPayee = payees.find(p => p.nickname === 'Car Loan')!;
+
+  const [homeLoan, autoLoan] = await Loan.create([
+    {
+      userId: user._id, loanType: 'home',
+      principalAmount: 350000, outstandingBalance: 287500,
+      interestRate: 6.75, tenureMonths: 360, emiAmount: 2270.15,
+      nextDueDate: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000),
+      startDate: new Date('2020-03-01'), endDate: new Date('2050-03-01'),
+      status: 'active', loanNumber: 'LN-HOME-2020-4521',
+    },
+    {
+      userId: user._id, loanType: 'auto',
+      principalAmount: 28000, outstandingBalance: 18100,
+      interestRate: 8.5, tenureMonths: 60, emiAmount: 450,
+      nextDueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      startDate: new Date('2024-08-05'), endDate: new Date('2029-08-05'),
+      status: 'active', loanNumber: 'LN-AUTO-2024-8831',
+      linkedPayeeId: carPayee._id,
+    },
+  ]);
+
+  const homeEmiTxs = seedEmiPayments({
+    userId: user._id,
+    loanId: homeLoan._id,
+    fromAccount: checking.maskedNumber,
+    recipientName: 'U.S. Bank Mortgage Services',
+    routingNumber: '091000022',
+    amount: 2270.15,
+    count: 75,
+    startYear: 2020,
+    startMonth: 3,
+    dayOfMonth: 1,
+    memoPrefix: 'Home Loan EMI',
+    refPrefix: 'HOME-EMI',
+  });
+
+  const carEmiTxs = seedEmiPayments({
+    userId: user._id,
+    loanId: autoLoan._id,
+    fromAccount: checking.maskedNumber,
+    toAccount: carPayee.accountNumber,
+    recipientName: carPayee.fullName,
+    routingNumber: carPayee.routingNumber,
+    amount: 450,
+    count: 22,
+    startYear: 2024,
+    startMonth: 8,
+    dayOfMonth: 5,
+    memoPrefix: 'Car EMI',
+    refPrefix: 'AUTO-EMI',
+  });
+
+  const txBase = new Date();
+  await Transaction.create([
+    ...homeEmiTxs,
+    ...carEmiTxs,
+    { userId: user._id, type: 'ach',          status: 'completed', amount: 500,  fromAccount: checking.maskedNumber, toAccount: '****8890', recipientName: 'Jane Smith',      routingNumber: '071000013', memo: 'Rent',             referenceNumber: 'ACH-A1B2-001', completedAt: new Date(txBase.getTime() - 1*86400000) },
+    { userId: user._id, type: 'zelle',        status: 'completed', amount: 75,   fromAccount: checking.maskedNumber, recipientName: 'mike@example.com',                         memo: 'Dinner split',      referenceNumber: 'ZEL-C3D4-002', completedAt: new Date(txBase.getTime() - 3*86400000) },
+    { userId: user._id, type: 'wire',         status: 'completed', amount: 2500, fromAccount: checking.maskedNumber, recipientName: 'Acme Corp',         recipientBank: 'Chase', memo: 'Invoice #1042',    referenceNumber: 'WIRE-E5F6-003', completedAt: new Date(txBase.getTime() - 5*86400000) },
+    { userId: user._id, type: 'card_payment', status: 'completed', amount: 500,  fromAccount: checking.maskedNumber,                                                             memo: 'Credit card pay',  referenceNumber: 'CPY-G7H8-004',  completedAt: new Date(txBase.getTime() - 7*86400000) },
+    { userId: user._id, type: 'ach',          status: 'completed', amount: 1200, fromAccount: savings.maskedNumber,  toAccount: '****3311', recipientName: 'City Utilities',    memo: 'Utility bill',     referenceNumber: 'ACH-I9J0-005',  completedAt: new Date(txBase.getTime() - 10*86400000) },
+    { userId: user._id, type: 'zelle',        status: 'completed', amount: 150,  fromAccount: checking.maskedNumber, recipientName: 'sara@example.com',                         memo: 'Concert tickets',  referenceNumber: 'ZEL-K1L2-006',  completedAt: new Date(txBase.getTime() - 14*86400000) },
+  ]);
+
+  await Payee.updateOne(
+    { _id: carPayee._id },
+    { $set: { lastPaidAmount: 450, lastPaidDate: d(2026, 5, 5), totalTransfers: 22 } },
+  );
 
   await RecurringBucket.create({
     userId: user._id,

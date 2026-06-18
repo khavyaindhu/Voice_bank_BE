@@ -16,6 +16,8 @@ export interface ITransaction extends Document {
   routingNumber?: string;
   swiftCode?: string;
   memo?: string;
+  /** When set, this payment counts toward loan EMI progress. */
+  loanId?: mongoose.Types.ObjectId;
   referenceNumber: string;
   scheduledDate?: Date;
   completedAt?: Date;
@@ -37,6 +39,7 @@ const TransactionSchema = new Schema<ITransaction>(
     routingNumber: String,
     swiftCode: String,
     memo: String,
+    loanId: { type: Schema.Types.ObjectId, ref: 'Loan' },
     referenceNumber: { type: String, required: true, unique: true },
     scheduledDate: Date,
     completedAt: Date,
@@ -45,5 +48,6 @@ const TransactionSchema = new Schema<ITransaction>(
 );
 
 TransactionSchema.index({ userId: 1, createdAt: -1 });
+TransactionSchema.index({ userId: 1, loanId: 1, completedAt: -1 });
 
 export default mongoose.model<ITransaction>('Transaction', TransactionSchema);

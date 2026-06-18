@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/auth';
 import RecurringBucket, { IRecurringBucket, IRecurringItem } from '../models/RecurringBucket';
 import Payee from '../models/Payee';
 import Transaction from '../models/Transaction';
+import Loan from '../models/Loan';
 import { genTransactionRef } from '../utils/transactionRef';
 import mongoose from 'mongoose';
 
@@ -43,31 +44,32 @@ async function createTransactionForPayee(
   amount: number,
   fromAccount: string,
   memo: string,
+  loanId?: mongoose.Types.ObjectId,
 ) {
+  const base = {
+    userId,
+    amount,
+    fromAccount,
+    recipientName: payee.fullName,
+    memo,
+    ...(loanId ? { loanId } : {}),
+  };
   if (payee.transferType === 'wire') {
     return Transaction.create({
-      userId,
+      ...base,
       type: 'wire',
       status: 'processing',
-      amount,
-      fromAccount,
-      recipientName: payee.fullName,
       recipientBank: payee.bankName,
       routingNumber: payee.routingNumber,
-      memo,
       referenceNumber: genTransactionRef('WIRE'),
     });
   }
   return Transaction.create({
-    userId,
+    ...base,
     type: 'ach',
     status: 'processing',
-    amount,
-    fromAccount,
     toAccount: payee.accountNumber,
-    recipientName: payee.fullName,
     routingNumber: payee.routingNumber,
-    memo,
     referenceNumber: genTransactionRef('ACH'),
     scheduledDate: new Date(),
   });
@@ -254,7 +256,19 @@ export async function payAll(req: AuthRequest, res: Response): Promise<void> {
           errors.push(`${item.name}: linked payee not found`);
           continue;
         }
-        const tx = await createTransactionForPayee(req.userId!, payee, amt, fromAccount, memo);
+        const linkedLoan = await Loan.findOne({
+          userId: req.userId,
+          linkedPayeeId: payee._id,
+          status: 'active',
+        });
+        const tx = await createTransactionForPayee(
+          req.userId!,
+          payee,
+          amt,
+          fromAccount,
+          memo,
+          linkedLoan?._id,
+        );
         transactions.push(tx);
         await Payee.findOneAndUpdate(
           { _id: payee._id, userId: req.userId },

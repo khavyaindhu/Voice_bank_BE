@@ -1,7 +1,63 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import Loan from '../models/Loan';
+import Loan, { ILoan } from '../models/Loan';
+import Transaction from '../models/Transaction';
 import { v4 as uuidv4 } from 'uuid';
+
+function mapLoan(loan: ILoan) {
+  return {
+    id: loan._id.toString(),
+    loanType: loan.loanType,
+    loanNumber: loan.loanNumber,
+    principalAmount: loan.principalAmount,
+    outstandingBalance: loan.outstandingBalance,
+    interestRate: loan.interestRate,
+    tenureMonths: loan.tenureMonths,
+    emiAmount: loan.emiAmount,
+    nextDueDate: loan.nextDueDate,
+    startDate: loan.startDate,
+    endDate: loan.endDate,
+    status: loan.status,
+    lenderName: loan.lenderName,
+    linkedPayeeId: loan.linkedPayeeId?.toString(),
+  };
+}
+
+async function buildEmiProgress(loan: ILoan) {
+  const payments = await Transaction.find({
+    userId: loan.userId,
+    loanId: loan._id,
+    status: 'completed',
+  }).sort({ completedAt: -1 });
+
+  const installmentsPaid = payments.length;
+  const totalPaid = payments.reduce((sum, tx) => sum + Number(tx.amount), 0);
+  const installmentsRemaining = Math.max(0, loan.tenureMonths - installmentsPaid);
+  const principalRepaid = loan.principalAmount - loan.outstandingBalance;
+  const now = new Date();
+  const monthsSinceStart = Math.max(
+    0,
+    (now.getFullYear() - loan.startDate.getFullYear()) * 12 +
+      (now.getMonth() - loan.startDate.getMonth()),
+  );
+
+  return {
+    loan: mapLoan(loan),
+    installmentsPaid,
+    installmentsRemaining,
+    totalPaid: Math.round(totalPaid * 100) / 100,
+    principalRepaid: Math.round(principalRepaid * 100) / 100,
+    monthsSinceStart,
+    payments: payments.map(tx => ({
+      id: tx._id.toString(),
+      amount: Number(tx.amount),
+      completedAt: tx.completedAt ?? tx.createdAt,
+      referenceNumber: tx.referenceNumber,
+      memo: tx.memo,
+      recipientName: tx.recipientName,
+    })),
+  };
+}
 
 export async function getLoans(req: AuthRequest, res: Response): Promise<void> {
   const loans = await Loan.find({ userId: req.userId });
@@ -12,6 +68,28 @@ export async function getLoanById(req: AuthRequest, res: Response): Promise<void
   const loan = await Loan.findOne({ _id: req.params.id, userId: req.userId });
   if (!loan) { res.status(404).json({ message: 'Loan not found' }); return; }
   res.json(loan);
+}
+
+/** GET /loans/emi-progress?type=auto|home */
+export async function getEmiProgressByType(req: AuthRequest, res: Response): Promise<void> {
+  const type = String(req.query.type ?? '').toLowerCase();
+  if (!['home', 'auto', 'personal', 'student'].includes(type)) {
+    res.status(400).json({ message: 'Query param type must be home, auto, personal, or student' });
+    return;
+  }
+  const loan = await Loan.findOne({ userId: req.userId, loanType: type, status: 'active' });
+  if (!loan) {
+    res.status(404).json({ message: `No active ${type} loan found` });
+    return;
+  }
+  res.json(await buildEmiProgress(loan));
+}
+
+/** GET /loans/:id/emi-progress */
+export async function getLoanEmiProgress(req: AuthRequest, res: Response): Promise<void> {
+  const loan = await Loan.findOne({ _id: req.params.id, userId: req.userId });
+  if (!loan) { res.status(404).json({ message: 'Loan not found' }); return; }
+  res.json(await buildEmiProgress(loan));
 }
 
 export async function applyForLoan(req: AuthRequest, res: Response): Promise<void> {
