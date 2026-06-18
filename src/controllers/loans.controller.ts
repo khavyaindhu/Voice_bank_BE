@@ -23,17 +23,33 @@ function mapLoan(loan: ILoan) {
   };
 }
 
-async function buildEmiProgress(loan: ILoan) {
-  const payments = await Transaction.find({
+async function findEmiPayments(loan: ILoan) {
+  return Transaction.find({
     userId: loan.userId,
     loanId: loan._id,
     status: 'completed',
   }).sort({ completedAt: -1 });
+}
+
+async function buildEmiProgress(loan: ILoan) {
+  const payments = await findEmiPayments(loan);
 
   const installmentsPaid = payments.length;
   const totalPaid = payments.reduce((sum, tx) => sum + Number(tx.amount), 0);
   const installmentsRemaining = Math.max(0, loan.tenureMonths - installmentsPaid);
   const principalRepaid = loan.principalAmount - loan.outstandingBalance;
+
+  const sortedAsc = [...payments].sort(
+    (a, b) =>
+      (a.completedAt?.getTime() ?? a.createdAt?.getTime() ?? 0) -
+      (b.completedAt?.getTime() ?? b.createdAt?.getTime() ?? 0),
+  );
+  const firstPaymentAt = sortedAsc[0]?.completedAt ?? sortedAsc[0]?.createdAt ?? null;
+  const lastPaymentAt =
+    sortedAsc[sortedAsc.length - 1]?.completedAt ??
+    sortedAsc[sortedAsc.length - 1]?.createdAt ??
+    null;
+
   const now = new Date();
   const monthsSinceStart = Math.max(
     0,
@@ -48,6 +64,8 @@ async function buildEmiProgress(loan: ILoan) {
     totalPaid: Math.round(totalPaid * 100) / 100,
     principalRepaid: Math.round(principalRepaid * 100) / 100,
     monthsSinceStart,
+    firstPaymentAt,
+    lastPaymentAt,
     payments: payments.map(tx => ({
       id: tx._id.toString(),
       amount: Number(tx.amount),

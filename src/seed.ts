@@ -10,7 +10,7 @@ import Transaction from './models/Transaction';
 import Payee from './models/Payee';
 import RecurringBucket from './models/RecurringBucket';
 import LedgerEntry from './models/LedgerEntry';
-import mongoose from 'mongoose';
+import { buildEmiPaymentDocs } from './utils/emiPaymentSeed';
 
 // ── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -18,46 +18,7 @@ function d(year: number, month: number, day: number): Date {
   return new Date(year, month - 1, day);
 }
 
-/** Generate monthly completed EMI transactions linked to a loan. */
-function seedEmiPayments(opts: {
-  userId: mongoose.Types.ObjectId;
-  loanId: mongoose.Types.ObjectId;
-  fromAccount: string;
-  toAccount?: string;
-  recipientName: string;
-  routingNumber?: string;
-  amount: number;
-  count: number;
-  startYear: number;
-  startMonth: number;
-  dayOfMonth: number;
-  memoPrefix: string;
-  refPrefix: string;
-}) {
-  const txs = [];
-  for (let i = 0; i < opts.count; i++) {
-    const monthIndex = opts.startMonth - 1 + i;
-    const year = opts.startYear + Math.floor(monthIndex / 12);
-    const month = (monthIndex % 12) + 1;
-    const date = d(year, month, opts.dayOfMonth);
-    const monthLabel = date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
-    txs.push({
-      userId: opts.userId,
-      loanId: opts.loanId,
-      type: 'ach',
-      status: 'completed',
-      amount: opts.amount,
-      fromAccount: opts.fromAccount,
-      ...(opts.toAccount ? { toAccount: opts.toAccount } : {}),
-      recipientName: opts.recipientName,
-      ...(opts.routingNumber ? { routingNumber: opts.routingNumber } : {}),
-      memo: `${opts.memoPrefix} – ${monthLabel}`,
-      referenceNumber: `${opts.refPrefix}-${String(i + 1).padStart(3, '0')}`,
-      completedAt: date,
-    });
-  }
-  return txs;
-}
+const seedEmiPayments = buildEmiPaymentDocs;
 
 // ── Main seed ────────────────────────────────────────────────────────────────
 
@@ -602,6 +563,8 @@ async function seed(): Promise<void> {
 
   console.log(`✅ Seed complete — ${entries.length} ledger entries created`);
   console.log('✅ Recurring Bucket A seeded (7 monthly bills)');
+  console.log(`Seeded EMI payments — home: ${homeEmiTxs.length}, car: ${carEmiTxs.length}`);
+  console.log('After seed: log out and log in as johndoe / Demo@1234 so JWT matches the new user.');
   console.log('Demo login — username: johndoe | password: Demo@1234');
   process.exit(0);
 }
