@@ -163,6 +163,12 @@ async function seed(): Promise<void> {
     { userId: user._id, type: 'zelle',        status: 'completed', amount: 150,  fromAccount: checking.maskedNumber, recipientName: 'sara@example.com',                         memo: 'Concert tickets',  referenceNumber: 'ZEL-K1L2-006',  completedAt: new Date(txBase.getTime() - 14*86400000) },
   ]);
 
+  const emiLinked = await Transaction.countDocuments({
+    userId: user._id,
+    loanId: { $in: [homeLoan._id, autoLoan._id] },
+    status: 'completed',
+  });
+
   await Payee.updateOne(
     { _id: carPayee._id },
     { $set: { lastPaidAmount: 450, lastPaidDate: d(2026, 5, 5), totalTransfers: 22 } },
@@ -563,8 +569,8 @@ async function seed(): Promise<void> {
 
   console.log(`✅ Seed complete — ${entries.length} ledger entries created`);
   console.log('✅ Recurring Bucket A seeded (7 monthly bills)');
-  console.log(`Seeded EMI payments — home: ${homeEmiTxs.length}, car: ${carEmiTxs.length}`);
-  console.log('After seed: log out and log in as johndoe / Demo@1234 so JWT matches the new user.');
+  console.log(`✅ EMI payments seeded — home: ${homeEmiTxs.length}, car: ${carEmiTxs.length}, verified in DB: ${emiLinked}`);
+  console.log('⚠️  Log out and log in as johndoe / Demo@1234 (seed creates a new user id each run).');
   console.log('Demo login — username: johndoe | password: Demo@1234');
   process.exit(0);
 }

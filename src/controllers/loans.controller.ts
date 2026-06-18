@@ -24,11 +24,27 @@ function mapLoan(loan: ILoan) {
 }
 
 async function findEmiPayments(loan: ILoan) {
-  return Transaction.find({
+  let payments = await Transaction.find({
     userId: loan.userId,
     loanId: loan._id,
     status: 'completed',
   }).sort({ completedAt: -1 });
+
+  // Legacy rows seeded before loanId existed — read only, no inserts
+  if (payments.length === 0) {
+    const memoPrefix =
+      loan.loanType === 'home' ? 'Home Loan EMI' :
+      loan.loanType === 'auto' ? 'Car EMI' : null;
+    if (memoPrefix) {
+      payments = await Transaction.find({
+        userId: loan.userId,
+        status: 'completed',
+        memo: new RegExp(`^${memoPrefix}`, 'i'),
+      }).sort({ completedAt: -1 });
+    }
+  }
+
+  return payments;
 }
 
 async function buildEmiProgress(loan: ILoan) {

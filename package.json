@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "ts-node src/seed.ts",
-    "seed:prod": "node dist/seed.js"
+    "seed:prod": "npm run build && node dist/seed.js"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",
