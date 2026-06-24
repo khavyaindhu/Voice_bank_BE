@@ -28,7 +28,7 @@ const intents: Intent[] = [
     patterns: [/^(hi|hello|hey|good\s*(morning|afternoon|evening)|howdy)/i],
     response: (ctx) => {
       const screenLabel = getScreenLabel(ctx.screen);
-      return `Hello! 👋 I'm **Maya**, your U.S. Bank AI assistant.\n\nI can see you're on the **${screenLabel}** screen. I'm here to help you with:\n- **Transfers** — ACH, Wire, Zelle\n- **Payments** — Card payments, Bill pay\n- **Accounts** — Balances, RD details\n- **Loans** — Home, Auto, Personal loan guidance\n\nWhat can I help you with today?`;
+      return `Hello! I'm **Maya**, your U.S. Bank AI assistant.\n\nI can see you're on the **${screenLabel}** screen. I'm here to help you with:\n- **Transfers** — ACH, Wire, Zelle\n- **Payments** — Card payments, Bill pay\n- **Accounts** — Balances, RD details\n- **Loans** — Home, Auto, Personal loan guidance\n\nWhat can I help you with today?`;
     },
   },
 
@@ -50,8 +50,8 @@ const intents: Intent[] = [
         `6. Enter the **Amount** (fee: $25–$30 domestic, $45–$55 international)\n` +
         `7. Add a **Wire Purpose / Memo** (e.g., Invoice payment)\n` +
         `8. Click **Send Wire Transfer** and confirm\n\n` +
-        `⚠️ **Wire transfers are irreversible.** Double-check all details before submitting.\n\n` +
-        `⏰ Domestic wires sent before **4:00 PM CT** arrive same business day.`;
+        `**Wire transfers are irreversible.** Double-check all details before submitting.\n\n` +
+        `Domestic wires sent before **4:00 PM CT** arrive same business day.`;
     },
   },
 
@@ -72,8 +72,8 @@ const intents: Intent[] = [
         `6. Add optional **Memo**\n` +
         `7. Choose a **Schedule Date** or leave as today\n` +
         `8. Click **Submit ACH Transfer**\n\n` +
-        `📅 ACH transfers take **1–3 business days** to process.\n` +
-        `⏰ Cutoff time: **3:00 PM CT** for same-day initiation.`;
+        `ACH transfers take **1–3 business days** to process.\n` +
+        `Cutoff time: **3:00 PM CT** for same-day initiation.`;
     },
   },
 
@@ -90,8 +90,8 @@ const intents: Intent[] = [
         `2. Enter the **Amount**\n` +
         `3. Add an optional **Memo**\n` +
         `4. Click **Send with Zelle**\n\n` +
-        `⚡ Zelle payments are **instant** and typically **free**.\n` +
-        `⚠️ Zelle transfers are **FINAL** — they cannot be reversed.\n\n` +
+        `Zelle payments are **instant** and typically **free**.\n` +
+        `Zelle transfers are **FINAL** — they cannot be reversed.\n\n` +
         `**Limits:** Daily $2,500 · Monthly $20,000\n` +
         `The recipient must have a Zelle-enrolled bank account.`;
     },
@@ -113,8 +113,8 @@ const intents: Intent[] = [
         `   - **Custom Amount** — enter a specific amount\n` +
         `3. Select the **Source Account** (Checking/Savings)\n` +
         `4. Click **Make Payment**\n\n` +
-        `📅 Payments post within **1–2 business days**.\n` +
-        `💡 To avoid interest charges, always pay the **full balance** by the due date.`;
+        `Payments post within **1–2 business days**.\n` +
+        `To avoid interest charges, always pay the **full balance** by the due date.`;
     },
   },
 
@@ -124,9 +124,9 @@ const intents: Intent[] = [
     response: (ctx) => {
       if (ctx.accountSummary && (ctx.accountSummary.checkingBalance !== undefined)) {
         return `**Your Current Account Balances:**\n\n` +
-          `🏦 **Checking Account:** $${ctx.accountSummary.checkingBalance?.toLocaleString() ?? 'N/A'} available\n` +
-          `💰 **Savings Account:** $${ctx.accountSummary.savingsBalance?.toLocaleString() ?? 'N/A'}\n` +
-          `💳 **Credit Card Balance:** $${ctx.accountSummary.creditBalance?.toLocaleString() ?? 'N/A'}\n\n` +
+          `**Checking Account:** $${ctx.accountSummary.checkingBalance?.toLocaleString() ?? 'N/A'} available\n` +
+          `**Savings Account:** $${ctx.accountSummary.savingsBalance?.toLocaleString() ?? 'N/A'}\n` +
+          `**Credit Card Balance:** $${ctx.accountSummary.creditBalance?.toLocaleString() ?? 'N/A'}\n\n` +
           `For full details including RD account and transaction history, visit the **Accounts** section from the sidebar.`;
       }
       return `Your account balances are shown on the **Dashboard** and **Accounts** page.\n\n` +
@@ -149,7 +149,7 @@ const intents: Intent[] = [
       `- **Tenure:** 6 months to 10 years\n` +
       `- **Interest rate:** 4.5%–7.5% (higher tenure = higher rate)\n` +
       `- On **maturity**, principal + interest is credited to your linked savings account\n\n` +
-      `⚠️ **Premature withdrawal:** Allowed with a **1% penalty** on earned interest.\n\n` +
+      `**Premature withdrawal:** Allowed with a **1% penalty** on earned interest.\n\n` +
       `Your current RD: **$1,500/month** for **24 months** at **6.5% p.a.**`,
   },
 
@@ -167,9 +167,9 @@ const intents: Intent[] = [
       `6. Loan officer contacts you within **2–3 business days**\n` +
       `7. Conditional approval → Property appraisal → Final approval → Closing\n\n` +
       `**Key Details:**\n` +
-      `- 📊 Current rate: ~**6.75% APR** (30-year fixed)\n` +
-      `- 📋 Min. credit score: **620** (recommended: 740+)\n` +
-      `- ⏱️ Typical closing time: 30–45 days`,
+      `- Current rate: ~**6.75% APR** (30-year fixed)\n` +
+      `- Min. credit score: **620** (recommended: 740+)\n` +
+      `- Typical closing time: 30–45 days`,
   },
 
   // Auto Loan
@@ -177,9 +177,9 @@ const intents: Intent[] = [
     patterns: [/auto\s*loan/i, /car\s*loan/i, /vehicle\s*loan/i, /apply.*auto/i],
     response: () =>
       `**Auto Loan at U.S. Bank:**\n\n` +
-      `- 📊 Rate: ~**8.5% APR**\n` +
-      `- ⏳ Term: **24–84 months**\n` +
-      `- ⚡ Instant pre-approval available online\n\n` +
+      `- Rate: ~**8.5% APR**\n` +
+      `- Term: **24–84 months**\n` +
+      `- Instant pre-approval available online\n\n` +
       `**Documents needed:**\n` +
       `- Government-issued ID\n` +
       `- Proof of income (pay stubs)\n` +
@@ -192,10 +192,10 @@ const intents: Intent[] = [
     patterns: [/personal\s*loan/i, /apply.*personal/i, /unsecured\s*loan/i],
     response: () =>
       `**Personal Loan at U.S. Bank:**\n\n` +
-      `- 📊 Rate: **10.99%–19.99% APR** (based on credit score)\n` +
-      `- 💵 Amounts: **$1,000–$50,000**\n` +
-      `- ⏳ Term: **12–60 months**\n` +
-      `- ⚡ Funds deposited in **1–2 business days** after approval\n\n` +
+      `- Rate: **10.99%–19.99% APR** (based on credit score)\n` +
+      `- Amounts: **$1,000–$50,000**\n` +
+      `- Term: **12–60 months**\n` +
+      `- Funds deposited in **1–2 business days** after approval\n\n` +
       `Go to **Loans → Apply for a New Loan** → Select **Personal Loan**.`,
   },
 
@@ -205,11 +205,11 @@ const intents: Intent[] = [
     response: () =>
       `**Your Loan Details** are on the **Loans** page.\n\n` +
       `Your current **Home Loan:**\n` +
-      `- 🏠 Outstanding Balance: **$287,500**\n` +
-      `- 💰 Monthly EMI: **$2,270.15**\n` +
-      `- 📊 Interest Rate: **6.75% APR**\n` +
-      `- 📅 Next Due Date: shown on the Loans page\n` +
-      `- ⏳ Loan End Date: March 2050\n\n` +
+      `- Outstanding Balance: **$287,500**\n` +
+      `- Monthly EMI: **$2,270.15**\n` +
+      `- Interest Rate: **6.75% APR**\n` +
+      `- Next Due Date: shown on the Loans page\n` +
+      `- Loan End Date: March 2050\n\n` +
       `Navigate to **Loans** in the sidebar for full amortization details.`,
   },
 
@@ -219,16 +219,16 @@ const intents: Intent[] = [
     response: () =>
       `**Your Card Details** are on the **Cards** page.\n\n` +
       `**Credit Card (Visa ****4523):**\n` +
-      `- 💳 Credit Limit: **$15,000**\n` +
-      `- 💰 Current Balance: **$3,245.50**\n` +
-      `- ✅ Available Credit: **$11,754.50**\n` +
-      `- 🎁 Reward Points: **12,450 pts**\n` +
-      `- 📅 Minimum Payment: $65.00\n\n` +
+      `- Credit Limit: **$15,000**\n` +
+      `- Current Balance: **$3,245.50**\n` +
+      `- Available Credit: **$11,754.50**\n` +
+      `- Reward Points: **12,450 pts**\n` +
+      `- Minimum Payment: $65.00\n\n` +
       `**U.S. Bank Card Options:**\n` +
       `- Visa Platinum — No annual fee, 0% intro APR for 15 months\n` +
       `- Altitude Go Visa — 4x points on dining\n` +
       `- Cash+ Visa Signature — 5% cash back on chosen categories\n\n` +
-      `🔒 To freeze/unfreeze your card, visit **Cards** → Toggle Freeze.`,
+      `To freeze/unfreeze your card, visit **Cards** → Toggle Freeze.`,
   },
 
   // Freeze card
@@ -239,9 +239,9 @@ const intents: Intent[] = [
       `1. Go to **Cards** in the sidebar\n` +
       `2. Select the card you want to manage\n` +
       `3. Click the **Freeze/Unfreeze** toggle\n\n` +
-      `🔒 A frozen card **cannot be used** for new transactions.\n` +
-      `✅ You can **unfreeze anytime** instantly.\n\n` +
-      `📞 To report a **lost or stolen card**, call: **1-800-285-8585** immediately.`,
+      `A frozen card **cannot be used** for new transactions.\n` +
+      `You can **unfreeze anytime** instantly.\n\n` +
+      `To report a **lost or stolen card**, call: **1-800-285-8585** immediately.`,
   },
 
   // Transaction history
@@ -262,22 +262,22 @@ const intents: Intent[] = [
     response: (ctx) => {
       const screenLabel = getScreenLabel(ctx.screen);
       return `I'm **Maya**, your U.S. Bank AI assistant. Here's what I can help with:\n\n` +
-        `💸 **Payments & Transfers**\n` +
+        `**Payments & Transfers**\n` +
         `- ACH Transfer steps\n` +
         `- Wire Transfer (Domestic & International)\n` +
         `- Zelle payments\n` +
         `- Credit card payments\n\n` +
-        `💰 **Account Info**\n` +
+        `**Account Info**\n` +
         `- Balance enquiries\n` +
         `- Recurring Deposit (RD) details\n` +
         `- Transaction history\n\n` +
-        `🏦 **Loans**\n` +
+        `**Loans**\n` +
         `- Home, Auto, Personal loan guidance\n` +
         `- EMI details & outstanding balance\n\n` +
-        `💳 **Cards**\n` +
+        `**Cards**\n` +
         `- Card details & reward points\n` +
         `- Freeze/unfreeze card\n\n` +
-        `📍 You're currently on: **${screenLabel}**`;
+        `You're currently on: **${screenLabel}**`;
     },
   },
 ];
@@ -395,7 +395,7 @@ export async function chat(
   const navMatch = findNavIntent(lastMessage, context.screen);
   if (navMatch) {
     return {
-      text: `Sure! Taking you to the **${navMatch.label}** screen now. 🚀\n\nOnce you're there, feel free to ask me anything about it!`,
+      text: `Sure! Taking you to the **${navMatch.label}** screen now.\n\nOnce you're there, feel free to ask me anything about it!`,
       navigateTo: navMatch.route,
     };
   }
@@ -413,7 +413,7 @@ export async function chat(
   // 4. Contextual fallback based on current screen
   const screenLabel = getScreenLabel(context.screen);
   return {
-    text: `I'm here to help you on the **${screenLabel}** screen! 😊\n\n` +
+    text: `I'm here to help you on the **${screenLabel}** screen!\n\n` +
       `I can answer questions about:\n` +
       `- How to complete this form\n` +
       `- Transfer limits and fees\n` +

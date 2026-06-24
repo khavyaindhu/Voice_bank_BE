@@ -21,7 +21,8 @@ export async function translateText(text: string, targetLangCode: string): Promi
   const prompt =
     `Translate the following banking assistant response to ${languageName}.\n\n` +
     `Rules:\n` +
-    `1. Keep all markdown formatting exactly: **, *, ##, - bullet points, numbered lists, emojis\n` +
+    `1. Keep all markdown formatting exactly: **, *, ##, - bullet points, numbered lists\n` +
+    `   Do NOT add any emojis.\n` +
     `2. Do NOT translate — keep exactly as written:\n` +
     `   - Brand/product names: Maya, U.S. Bank, Zelle, ACH, Wire, Visa, Mastercard\n` +
     `   - Financial acronyms: EMI, APR, ABA, SWIFT, BIC, RD, CT\n` +
