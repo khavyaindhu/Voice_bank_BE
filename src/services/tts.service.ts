@@ -26,6 +26,12 @@ const VOICE_MAP: Record<string, { languageCode: string; name: string; ssmlGender
     { languageCode: 'es-ES', name: 'es-ES-Wavenet-C', ssmlGender: 'FEMALE' },
     { languageCode: 'es-ES', name: 'es-ES-Standard-A', ssmlGender: 'FEMALE' },
   ],
+  fr: [
+    { languageCode: 'fr-FR', name: 'fr-FR-Neural2-A', ssmlGender: 'FEMALE' },
+    { languageCode: 'fr-FR', name: 'fr-FR-Neural2-C', ssmlGender: 'FEMALE' },
+    { languageCode: 'fr-FR', name: 'fr-FR-Wavenet-A', ssmlGender: 'FEMALE' },
+    { languageCode: 'fr-FR', name: 'fr-FR-Standard-A', ssmlGender: 'FEMALE' },
+  ],
   en: [
     { languageCode: 'en-US', name: 'en-US-Neural2-H', ssmlGender: 'FEMALE' },
     { languageCode: 'en-US', name: 'en-US-Wavenet-F', ssmlGender: 'FEMALE' },
@@ -106,7 +112,7 @@ export function isGoogleTtsConfigured(): boolean {
 // concatenated (browsers play concatenated MP3 frame streams fine).
 
 const TRANSLATE_TTS_LANG: Record<string, string> = {
-  en: 'en', hi: 'hi', ta: 'ta', kn: 'kn', es: 'es',
+  en: 'en', hi: 'hi', ta: 'ta', kn: 'kn', es: 'es', fr: 'fr',
 };
 
 const TRANSLATE_TTS_MAX_CHUNK = 180;

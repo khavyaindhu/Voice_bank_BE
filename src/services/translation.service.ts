@@ -7,6 +7,7 @@ export const SUPPORTED_LANGUAGES: Record<string, string> = {
   ta: 'Tamil',
   kn: 'Kannada',
   es: 'Spanish',
+  fr: 'French',
 };
 
 export async function translateText(text: string, targetLangCode: string): Promise<string> {
