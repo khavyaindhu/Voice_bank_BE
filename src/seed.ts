@@ -37,12 +37,23 @@ async function seed(): Promise<void> {
     LedgerEntry.deleteMany({}),
   ]);
 
-  // ── Primary demo user (logs in via UI) ───────────────────────────────────
+  // ── Staff login users ────────────────────────────────────────────────────
+  // johndoe  = super_admin  (password: Demo@1234)  — has Super Admin Settings tab
+  // staffadmin = admin      (password: Admin@1234)  — standard staff access only
   const user = await User.create({
     username: 'johndoe',
     email: 'john.doe@example.com',
     password: 'Demo@1234',
     fullName: 'John Doe',
+    role: 'super_admin',
+  });
+
+  await User.create({
+    username: 'staffadmin',
+    email: 'staff.admin@example.com',
+    password: 'Admin@1234',
+    fullName: 'Staff Admin',
+    role: 'admin',
   });
 
   const [checking, savings] = await Account.create([
@@ -241,21 +252,21 @@ async function seed(): Promise<void> {
     ],
   });
 
-  // ── Staff customers (exist in DB for staff portal; no UI login needed) ────
+  // ── Bank customers (visible in staff portal; role = customer) ──────────
   const [vijaya, ramesh, greenvalley, kavya, abcvendors, nayana,
          james, emily, michael, jake, sarah, robert] = await User.create([
-    { username: 'vijaya.k',    email: 'vijaya.k@example.com',    password: 'Demo@1234', fullName: 'Vijaya Krishnamurthy' },
-    { username: 'ramesh.v',    email: 'ramesh.v@example.com',    password: 'Demo@1234', fullName: 'Ramesh Venkataraman' },
-    { username: 'greenvalley', email: 'accounts@greenvalley.com', password: 'Demo@1234', fullName: 'Green Valley Properties LLC' },
-    { username: 'kavya.t',     email: 'kavya.t@example.com',     password: 'Demo@1234', fullName: 'Kavya Indhu Thiyagarajan' },
-    { username: 'abcvendors',  email: 'ops@abcvendors.com',      password: 'Demo@1234', fullName: 'ABC Vendors LLC' },
-    { username: 'nayana.r',    email: 'nayana.r@example.com',    password: 'Demo@1234', fullName: 'Nayana Rajan' },
-    { username: 'james.smith',   email: 'james.smith@example.com',   password: 'Demo@1234', fullName: 'James Smith' },
-    { username: 'emily.johnson', email: 'emily.johnson@example.com', password: 'Demo@1234', fullName: 'Emily Johnson' },
-    { username: 'michael.j',    email: 'michael.jordan@example.com', password: 'Demo@1234', fullName: 'Michael Jordan' },
-    { username: 'jake.williams', email: 'jake.williams@example.com', password: 'Demo@1234', fullName: 'Jake Williams' },
-    { username: 'sarah.davis',   email: 'sarah.davis@example.com',   password: 'Demo@1234', fullName: 'Sarah Davis' },
-    { username: 'robert.brown',  email: 'robert.brown@example.com',  password: 'Demo@1234', fullName: 'Robert Brown' },
+    { username: 'vijaya.k',    email: 'vijaya.k@example.com',    password: 'Demo@1234', fullName: 'Vijaya Krishnamurthy', role: 'customer' },
+    { username: 'ramesh.v',    email: 'ramesh.v@example.com',    password: 'Demo@1234', fullName: 'Ramesh Venkataraman', role: 'customer' },
+    { username: 'greenvalley', email: 'accounts@greenvalley.com', password: 'Demo@1234', fullName: 'Green Valley Properties LLC', role: 'customer' },
+    { username: 'kavya.t',     email: 'kavya.t@example.com',     password: 'Demo@1234', fullName: 'Kavya Indhu Thiyagarajan', role: 'customer' },
+    { username: 'abcvendors',  email: 'ops@abcvendors.com',      password: 'Demo@1234', fullName: 'ABC Vendors LLC', role: 'customer' },
+    { username: 'nayana.r',    email: 'nayana.r@example.com',    password: 'Demo@1234', fullName: 'Nayana Rajan', role: 'customer' },
+    { username: 'james.smith',   email: 'james.smith@example.com',   password: 'Demo@1234', fullName: 'James Smith', role: 'customer' },
+    { username: 'emily.johnson', email: 'emily.johnson@example.com', password: 'Demo@1234', fullName: 'Emily Johnson', role: 'customer' },
+    { username: 'michael.j',    email: 'michael.jordan@example.com', password: 'Demo@1234', fullName: 'Michael Jordan', role: 'customer' },
+    { username: 'jake.williams', email: 'jake.williams@example.com', password: 'Demo@1234', fullName: 'Jake Williams', role: 'customer' },
+    { username: 'sarah.davis',   email: 'sarah.davis@example.com',   password: 'Demo@1234', fullName: 'Sarah Davis', role: 'customer' },
+    { username: 'robert.brown',  email: 'robert.brown@example.com',  password: 'Demo@1234', fullName: 'Robert Brown', role: 'customer' },
   ]);
 
   // ── Cards for staff customers ─────────────────────────────────────────────

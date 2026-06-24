@@ -1,11 +1,14 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+export type UserRole = 'customer' | 'admin' | 'super_admin';
+
 export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
   fullName: string;
+  role: UserRole;
   lastLogin: Date;
   comparePassword(candidate: string): Promise<boolean>;
 }
@@ -16,6 +19,7 @@ const UserSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
     fullName: { type: String, required: true },
+    role: { type: String, enum: ['customer', 'admin', 'super_admin'], default: 'customer' },
     lastLogin: { type: Date, default: Date.now },
   },
   { timestamps: true }

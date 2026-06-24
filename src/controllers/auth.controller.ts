@@ -3,8 +3,10 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import Account from '../models/Account';
 
-function signToken(userId: string): string {
-  return jwt.sign({ userId }, process.env.JWT_SECRET!, {
+import type { UserRole } from '../models/User';
+
+function signToken(userId: string, role: UserRole): string {
+  return jwt.sign({ userId, role }, process.env.JWT_SECRET!, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   } as jwt.SignOptions);
 }
@@ -51,8 +53,8 @@ export async function register(req: Request, res: Response): Promise<void> {
   // Auto-provision demo accounts so the user can make payments immediately
   try { await createDemoAccounts(user._id.toString()); } catch { /* non-fatal */ }
 
-  const token = signToken(user._id.toString());
-  res.status(201).json({ token, user: { id: user._id, username: user.username, fullName: user.fullName, email: user.email } });
+  const token = signToken(user._id.toString(), user.role);
+  res.status(201).json({ token, user: { id: user._id, username: user.username, fullName: user.fullName, email: user.email, role: user.role } });
 }
 
 export async function login(req: Request, res: Response): Promise<void> {
@@ -68,14 +70,14 @@ export async function login(req: Request, res: Response): Promise<void> {
   }
   user.lastLogin = new Date();
   await user.save();
-  const token = signToken(user._id.toString());
-  res.json({ token, user: { id: user._id, username: user.username, fullName: user.fullName, email: user.email } });
+  const token = signToken(user._id.toString(), user.role);
+  res.json({ token, user: { id: user._id, username: user.username, fullName: user.fullName, email: user.email, role: user.role } });
 }
 
 export async function getMe(req: Request & { userId?: string }, res: Response): Promise<void> {
   const user = await User.findById(req.userId).select('-password');
   if (!user) { res.status(404).json({ message: 'User not found' }); return; }
-  res.json(user);
+  res.json({ id: user._id, username: user.username, fullName: user.fullName, email: user.email, role: user.role });
 }
 
 /** POST /api/auth/provision-accounts — one-time fix for users who registered before auto-provisioning */

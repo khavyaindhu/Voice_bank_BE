@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Card from '../models/Card';
 import LedgerEntry from '../models/LedgerEntry';
+import User from '../models/User';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -312,4 +313,31 @@ export async function getReportCustomers(req: Request, res: Response): Promise<v
     displayId: c._id,
     name: c.customerName,
   })));
+}
+
+/** GET /api/staff/admin-settings — super_admin only: staff user list + system config */
+export async function getAdminSettings(req: Request, res: Response): Promise<void> {
+  const staffUsers = await User.find(
+    { role: { $in: ['admin', 'super_admin'] } },
+    { password: 0 }
+  ).sort({ role: 1, username: 1 });
+
+  res.json({
+    staffUsers: staffUsers.map(u => ({
+      id:       u._id,
+      username: u.username,
+      fullName: u.fullName,
+      email:    u.email,
+      role:     u.role,
+      lastLogin: u.lastLogin,
+    })),
+    systemConfig: {
+      voiceEnabled:       true,
+      translationEnabled: true,
+      ttsEnabled:         true,
+      supportedLanguages: ['en', 'hi', 'ta', 'kn', 'es', 'fr'],
+      staffPortalVersion: '1.4.0',
+      environment:        'demo',
+    },
+  });
 }
